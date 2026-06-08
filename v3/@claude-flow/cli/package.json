@@ -81,7 +81,7 @@
   },
   "devDependencies": {
     "typescript": "^5.3.0",
-    "vitest": "^4.0.16"
+    "vitest": "^3.2.6"
   },
   "dependencies": {
     "@claude-flow/mcp": "^3.0.0-alpha.8",
