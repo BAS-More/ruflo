@@ -78,5 +78,10 @@
   "publishConfig": {
     "access": "public",
     "tag": "v3alpha"
+  },
+  "overrides": {
+    "vite": ">=7.3.2",
+    "brace-expansion": ">=2.0.3",
+    "minimatch": ">=9.0.7"
   }
 }
