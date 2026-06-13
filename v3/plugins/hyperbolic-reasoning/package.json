@@ -97,5 +97,10 @@
     "@ruvector/attention-wasm": "^0.1.0",
     "@ruvector/gnn-wasm": "^0.1.0",
     "@ruvector/sona": "^0.1.0"
+  },
+  "overrides": {
+    "vite": ">=7.3.2",
+    "brace-expansion": ">=2.0.3",
+    "minimatch": ">=9.0.7"
   }
 }

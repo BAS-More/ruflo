@@ -96,13 +96,20 @@
     "@size-limit/preset-small-lib": "^11.0.0",
     "@types/node": "^20.0.0",
     "@types/uuid": "^9.0.0",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.25.0",
     "size-limit": "^11.0.0",
     "tsup": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.4"
   },
-  "optionalDependencies": {
+  "optionalDependencies": {},
+  "overrides": {
+    "vite": ">=7.3.2",
+    "brace-expansion": ">=2.0.3",
+    "minimatch": ">=9.0.7",
+    "rollup": ">=4.58.1",
+    "flatted": ">=3.4.2",
+    "picomatch": ">=4.0.4"
   }
 }

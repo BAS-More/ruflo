@@ -40,5 +40,13 @@
   "publishConfig": {
     "access": "public",
     "tag": "v3alpha"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": ">=8.0.5"
+    }
+  },
+  "overrides": {
+    "vite": ">=8.0.5"
   }
 }
