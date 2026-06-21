@@ -196,9 +196,9 @@ export class TokenOptimizer extends EventEmitter {
   } {
     if (!this.configTuning) {
       // Scale defaults based on agent count
-      const batchSize = agentCount <= 4 ? 2 : agentCount <= 8 ? 4 : 6;
+      const batchSize = agentCount <= 4 ? 2 : agentCount <= 8 ? 4 : 5;
       const cacheSizeMB = Math.min(200, 25 * Math.ceil(agentCount / 2));
-      const topology = agentCount <= 6 ? 'hierarchical' : agentCount <= 12 ? 'hierarchical-mesh' : 'mesh';
+      const topology = agentCount <= 6 ? 'hierarchical' : agentCount <= 12 ? 'hierarchical-mesh' : 'hierarchical';
       return {
         batchSize,
         cacheSizeMB,

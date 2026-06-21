@@ -4,7 +4,7 @@
  * Validates all 10 MCP tool handlers work correctly.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Mock the agent-wasm module ───────────────────────────────
 
@@ -20,30 +20,31 @@ const mockAgentInfo = {
 };
 
 vi.mock('../src/ruvector/agent-wasm.js', () => ({
-  isAgentWasmAvailable: vi.fn().mockResolvedValue(true),
-  initAgentWasm: vi.fn().mockResolvedValue(undefined),
-  createWasmAgent: vi.fn().mockResolvedValue({ ...mockAgentInfo }),
-  promptWasmAgent: vi.fn().mockResolvedValue('Agent response'),
-  executeWasmTool: vi.fn().mockResolvedValue({ success: true, output: 'ok' }),
-  getWasmAgent: vi.fn().mockReturnValue({ ...mockAgentInfo }),
-  listWasmAgents: vi.fn().mockReturnValue([{ ...mockAgentInfo }]),
-  terminateWasmAgent: vi.fn().mockReturnValue(true),
-  getWasmAgentState: vi.fn().mockReturnValue({ messages: [], turn_count: 0 }),
-  getWasmAgentTools: vi.fn().mockReturnValue(['read_file', 'write_file']),
-  getWasmAgentTodos: vi.fn().mockReturnValue([]),
-  exportWasmState: vi.fn().mockReturnValue('{"state":"exported"}'),
-  createWasmMcpServer: vi.fn().mockResolvedValue(vi.fn().mockResolvedValue('{}')),
-  listGalleryTemplates: vi.fn().mockResolvedValue([{ id: 'coder', name: 'Coder Agent' }]),
-  getGalleryCount: vi.fn().mockResolvedValue(6),
-  getGalleryCategories: vi.fn().mockResolvedValue({ development: 2 }),
-  searchGalleryTemplates: vi.fn().mockResolvedValue([{ id: 'coder', name: 'Coder Agent', relevance: 0.7 }]),
-  getGalleryTemplate: vi.fn().mockResolvedValue({ id: 'coder', prompts: [], tools: [], skills: [] }),
-  createAgentFromTemplate: vi.fn().mockResolvedValue({ ...mockAgentInfo, id: 'wasm-agent-2-tpl' }),
-  buildRvfContainer: vi.fn().mockResolvedValue(new Uint8Array([0x52, 0x56, 0x46, 0x01])),
-  buildRvfFromTemplate: vi.fn().mockResolvedValue(new Uint8Array([0x52, 0x56, 0x46, 0x01])),
+  isAgentWasmAvailable: vi.fn(),
+  initAgentWasm: vi.fn(),
+  createWasmAgent: vi.fn(),
+  promptWasmAgent: vi.fn(),
+  executeWasmTool: vi.fn(),
+  getWasmAgent: vi.fn(),
+  listWasmAgents: vi.fn(),
+  terminateWasmAgent: vi.fn(),
+  getWasmAgentState: vi.fn(),
+  getWasmAgentTools: vi.fn(),
+  getWasmAgentTodos: vi.fn(),
+  exportWasmState: vi.fn(),
+  createWasmMcpServer: vi.fn(),
+  listGalleryTemplates: vi.fn(),
+  getGalleryCount: vi.fn(),
+  getGalleryCategories: vi.fn(),
+  searchGalleryTemplates: vi.fn(),
+  getGalleryTemplate: vi.fn(),
+  createAgentFromTemplate: vi.fn(),
+  buildRvfContainer: vi.fn(),
+  buildRvfFromTemplate: vi.fn(),
 }));
 
 import { wasmAgentTools } from '../src/mcp-tools/wasm-agent-tools.js';
+import * as AgentWasm from '../src/ruvector/agent-wasm.js';
 
 // ── Helper ───────────────────────────────────────────────────
 
@@ -64,6 +65,20 @@ function parseResult(result: { content: Array<{ type: string; text: string }> })
 // ── Tests ────────────────────────────────────────────────────
 
 describe('wasm-agent-tools MCP', () => {
+  // mockReset: true in vitest.config.ts resets all mock implementations before each test.
+  // Re-apply implementations here so every test starts with the expected mock behaviour.
+  beforeEach(() => {
+    vi.mocked(AgentWasm.createWasmAgent).mockResolvedValue({ ...mockAgentInfo });
+    vi.mocked(AgentWasm.promptWasmAgent).mockResolvedValue('Agent response');
+    vi.mocked(AgentWasm.executeWasmTool).mockResolvedValue({ success: true, output: 'ok' });
+    vi.mocked(AgentWasm.listWasmAgents).mockReturnValue([{ ...mockAgentInfo }]);
+    vi.mocked(AgentWasm.terminateWasmAgent).mockReturnValue(true);
+    vi.mocked(AgentWasm.getWasmAgentTools).mockReturnValue(['read_file', 'write_file']);
+    vi.mocked(AgentWasm.exportWasmState).mockReturnValue('{"state":"exported"}');
+    vi.mocked(AgentWasm.listGalleryTemplates).mockResolvedValue([{ id: 'coder', name: 'Coder Agent' }]);
+    vi.mocked(AgentWasm.searchGalleryTemplates).mockResolvedValue([{ id: 'coder', name: 'Coder Agent', relevance: 0.7 }]);
+    vi.mocked(AgentWasm.createAgentFromTemplate).mockResolvedValue({ ...mockAgentInfo, id: 'wasm-agent-2-tpl' });
+  });
   it('exports 10 tools', () => {
     expect(wasmAgentTools).toHaveLength(10);
   });
