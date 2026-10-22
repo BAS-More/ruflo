@@ -135,7 +135,7 @@ importers:
         version: 3.0.0-alpha.12(@types/node@20.19.27)
       '@claude-flow/embeddings':
         specifier: ^3.0.0-alpha.12
-        version: 3.0.0-alpha.45(@claude-flow/shared@3.0.0-alpha.8)(@ruvector/attention@0.1.32)(agentic-flow@2.0.14)
+        version: 3.0.0-alpha.45(@claude-flow/shared@3.0.0-alpha.8)(@ruvector/attention@0.1.32)(@ruvector/diskann@0.1.0)(@ruvector/rabitq-wasm@0.1.0)(agentic-flow@3.0.0-alpha.2)
       '@claude-flow/guidance':
         specifier: ^3.0.0-alpha.1
         version: 3.0.0-alpha.3(@types/node@20.19.27)(zod@3.25.76)
@@ -162,10 +162,10 @@ importers:
         version: 0.1.0
       '@ruvector/sona':
         specifier: ^0.1.5
-        version: 0.1.7
+        version: 0.1.8
       agentic-flow:
-        specifier: ^2.0.14
-        version: 2.0.14(@types/node@20.19.27)
+        specifier: ^3.0.0-alpha.1
+        version: 3.0.0-alpha.2
     devDependencies:
       typescript:
         specifier: ^5.3.0
@@ -808,7 +808,7 @@ packages:
       '@ruvector/router': 0.1.30
       '@ruvector/ruvllm-wasm': 2.0.2
       '@ruvector/rvagent-wasm': 0.1.0
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       agentdb: 3.0.0-alpha.17(@types/node@20.19.27)(zod@3.25.76)
       agentic-flow: 3.0.0-alpha.2
     transitivePeerDependencies:
@@ -916,47 +916,6 @@ packages:
       '@ruvector/rabitq-wasm': 0.1.0
       '@xenova/transformers': 2.17.2
       agentic-flow: 3.0.0-alpha.2
-      sql.js: 1.14.1
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - react-native-b4a
-    dev: false
-    optional: true
-
-  /@claude-flow/embeddings@3.0.0-alpha.45(@claude-flow/shared@3.0.0-alpha.8)(@ruvector/attention@0.1.32)(agentic-flow@2.0.14):
-    resolution: {integrity: sha512-OcFFh7H22ZnApdzqWXPNvUgz6XYYjhaDFyYRufmKPfRYsh8TmWOF5xUV3i9MCRqz38EugJqKQ8mbs35DC+Dgjg==}
-    engines: {node: '>=20.0.0'}
-    requiresBuild: true
-    peerDependencies:
-      '@claude-flow/shared': ^3.0.0-alpha.1
-      '@huggingface/transformers': ^4.0.0
-      '@ruvector/attention': ^2.2.2
-      '@ruvector/core': ^0.1.31
-      '@ruvector/diskann': ^0.1.0
-      '@ruvector/rabitq-wasm': ^0.1.0
-      agentic-flow: ^2.0.0
-      ruvector-onnx-embeddings-wasm: ^0.1.2
-    peerDependenciesMeta:
-      '@huggingface/transformers':
-        optional: true
-      '@ruvector/attention':
-        optional: true
-      '@ruvector/core':
-        optional: true
-      '@ruvector/diskann':
-        optional: true
-      '@ruvector/rabitq-wasm':
-        optional: true
-      agentic-flow:
-        optional: true
-      ruvector-onnx-embeddings-wasm:
-        optional: true
-    dependencies:
-      '@claude-flow/shared': 3.0.0-alpha.8
-      '@ruvector/attention': 0.1.32
-      '@xenova/transformers': 2.17.2
-      agentic-flow: 2.0.14(@types/node@20.19.27)
       sql.js: 1.14.1
     transitivePeerDependencies:
       - bare-abort-controller
@@ -1088,6 +1047,7 @@ packages:
 
   /@claude-flow/shared@3.0.0-alpha.8:
     resolution: {integrity: sha512-v5zzFnvJI2tfkaDNqRO7R1M4/PxFYa73hHXCKRN2Ec4MPKpTcAS9qhgAEAI/6hL4F66gW+2udUdQJzjwZGcXMg==}
+    deprecated: This tarball shipped local runtime files (logs/pids/settings); use 3.0.0 or later.
     dependencies:
       sql.js: 1.14.1
 
@@ -4673,6 +4633,7 @@ packages:
   /@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0):
     resolution: {integrity: sha512-jVPgBbH1gCy2Lb7X0AVQ8XAfgg0pJ4nvl8/IiQA6nxOsPvS+0zMJaFSs2ltXe0J6C8dqjcnpyqINDJmU30+uOg==}
     engines: {node: '>=14'}
+    deprecated: Use @opentelemetry/sdk-trace package
     requiresBuild: true
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
@@ -4687,6 +4648,7 @@ packages:
   /@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1):
     resolution: {integrity: sha512-jVPgBbH1gCy2Lb7X0AVQ8XAfgg0pJ4nvl8/IiQA6nxOsPvS+0zMJaFSs2ltXe0J6C8dqjcnpyqINDJmU30+uOg==}
     engines: {node: '>=14'}
+    deprecated: Use @opentelemetry/sdk-trace package
     requiresBuild: true
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
@@ -5426,15 +5388,6 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/graph-node-darwin-arm64@2.0.2:
-    resolution: {integrity: sha512-r1g7wCZIFtR98dBl33fwDr/f+aYsKA7gElhKStKkwpLpJMiY1jPaabvUOhvulRDALMGH3qgvpVc9/ChxLKT+WA==}
-    engines: {node: '>=18.0.0'}
-    cpu: [arm64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@ruvector/graph-node-darwin-arm64@2.0.4:
     resolution: {integrity: sha512-9YBCI4JFDNCGSDzSApZng3yjdAb7u3Rq2Fn4yyuGbHy26fEie9TqfFDNQ7d+uK6mPcxDVJDCPnIOKcHnFsyMBQ==}
     engines: {node: '>=18.0.0'}
@@ -5451,15 +5404,6 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/graph-node-darwin-x64@2.0.2:
-    resolution: {integrity: sha512-tJB6dVDItrCaYLF55jP6DjmCzo8BpmucA0JcV2X23x2Tb6hJ5lS5pm3ujhvPy3A/bzgretYEtfHeAQXf1tOy5A==}
-    engines: {node: '>=18.0.0'}
-    cpu: [x64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@ruvector/graph-node-darwin-x64@2.0.4:
     resolution: {integrity: sha512-WW07+HmIdbv3jij2tqRWbkJt5m6uR76PXDosIwOkwBjyLbV3Ck5kSW5DONctA6cOQuTEeCcOo9sIKqr3J/f2pQ==}
     engines: {node: '>=18.0.0'}
@@ -5470,15 +5414,6 @@ packages:
 
   /@ruvector/graph-node-linux-arm64-gnu@0.1.26:
     resolution: {integrity: sha512-WyhMaZZGKhTDf98ln6hzkN9yfnuK3asr/Y+VUyG5f0SQSXroq9RMpjy5sUYZI4Zo+wXyczDfOQmQo/NK8ZiZAQ==}
-    cpu: [arm64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
-  /@ruvector/graph-node-linux-arm64-gnu@2.0.2:
-    resolution: {integrity: sha512-GvzFtb+JjXjelNhZQl45HQK5zQqW0GrmpvUCIIWEbDtVLgfCbw37UkLvgc1Kf9qxJHFwl5DTWfKLgbyyKdSX9g==}
-    engines: {node: '>=18.0.0'}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
@@ -5502,15 +5437,6 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/graph-node-linux-x64-gnu@2.0.2:
-    resolution: {integrity: sha512-yaY/jj3PZ5lSfHhTcc2g5hTDg+pzG4Vo5LfiL1ecU+r+jl2zbLsMecb8ldDFibVO3DFuxTjH/I1+bDFo2fC/Qg==}
-    engines: {node: '>=18.0.0'}
-    cpu: [x64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
   /@ruvector/graph-node-linux-x64-gnu@2.0.4:
     resolution: {integrity: sha512-RAdkLcB1gjEQcIsCxmSGHSOBbnUbCn7If8H9YrOqy5xxvmTVE25tkM49fpRRK3oINWJ9oQDBsAZr7GXKQZoLig==}
     engines: {node: '>=18.0.0'}
@@ -5521,15 +5447,6 @@ packages:
 
   /@ruvector/graph-node-win32-x64-msvc@0.1.26:
     resolution: {integrity: sha512-JuB6ff4opUhehaRiWJnKY39snLDAs1EPJRV32+NCS40cqBc7OJ5ywVqVBMIL1XGMAMEsByypvAv1JU7C1pQeRw==}
-    cpu: [x64]
-    os: [win32]
-    requiresBuild: true
-    dev: false
-    optional: true
-
-  /@ruvector/graph-node-win32-x64-msvc@2.0.2:
-    resolution: {integrity: sha512-f38C7oi4mkVl5a5q61rzITvWXIQGykqCWIKgEhGcEt/bDOX2wYCr1F5/AM+Ixz9pYKFvNNrzjozsafeevHWn0Q==}
-    engines: {node: '>=18.0.0'}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
@@ -5555,19 +5472,6 @@ packages:
       '@ruvector/graph-node-linux-x64-gnu': 0.1.26
       '@ruvector/graph-node-win32-x64-msvc': 0.1.26
     dev: false
-
-  /@ruvector/graph-node@2.0.2:
-    resolution: {integrity: sha512-uFPPTqx1hHsF9p6kAcEnEAEkb8zLf9lw+euPxr1voiRCBHt8L3sUXkeNvz50eHtJjxUW9dm4loIbsYuxao+M0g==}
-    engines: {node: '>=18.0.0'}
-    requiresBuild: true
-    optionalDependencies:
-      '@ruvector/graph-node-darwin-arm64': 2.0.2
-      '@ruvector/graph-node-darwin-x64': 2.0.2
-      '@ruvector/graph-node-linux-arm64-gnu': 2.0.2
-      '@ruvector/graph-node-linux-x64-gnu': 2.0.2
-      '@ruvector/graph-node-win32-x64-msvc': 2.0.2
-    dev: false
-    optional: true
 
   /@ruvector/graph-node@2.0.4:
     resolution: {integrity: sha512-pPUbQBF+Otnpd5YNgiQl3eaRsivi6NougS0hSmYbCd5i9gMJrr5u7oXL8pHwL/D9YbNKEkeIclhN6zu1rg5aUA==}
@@ -5961,8 +5865,8 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/sona-darwin-arm64@0.1.7:
-    resolution: {integrity: sha512-7J1Mpakghe9iTZc2cTTMK6dtMQLhSQKxG9bN1LAakp0Gn/r6N7qmbJEJWGx4vZcsYoQKPbl9ijIDKLgEu92qAQ==}
+  /@ruvector/sona-darwin-arm64@0.1.8:
+    resolution: {integrity: sha512-lv8YOBTamryaAKsjGgYe8TvAW/pccTJhwLexaBre0KpCp1BPnULqT4lYQQB4YjIQqML4cuzSIoDHRH9a9JwTtQ==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
@@ -5976,8 +5880,8 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/sona-darwin-x64@0.1.7:
-    resolution: {integrity: sha512-elFfUL9fYd+6uP7R64KEiq+8adpyrIKv2f8WVUU42OXQ1K0KWMrLYWW5NzPVcS/KHv1t0eUwc06HnqWgA8KXaQ==}
+  /@ruvector/sona-darwin-x64@0.1.8:
+    resolution: {integrity: sha512-a5jRBNQSo60698kIbVoDxj28nuVxpdpYKj/3gvFy3Z0wUlXc4jkz+r+Wpwn/mFOq5xDCm6VHsiYPRYA4/EBQcg==}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
@@ -5991,8 +5895,8 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/sona-linux-arm64-gnu@0.1.7:
-    resolution: {integrity: sha512-ihpsAPnggDQ6vPi1It8d+bUcwCngYGL3DmC3kyIZ0hWUzuxRx45abmgPqVCtc58hllNXaY/nJ9guiQFF2JNcDg==}
+  /@ruvector/sona-linux-arm64-gnu@0.1.8:
+    resolution: {integrity: sha512-rYoJdW3cDVIgORqSZoSzYgPkC0L4K9KoxsdZFdiXpKWGP9SWOwUXLVIbNeEk+Po+QNoju02TXAf+lLva+VmI7w==}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
@@ -6006,8 +5910,8 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/sona-linux-x64-gnu@0.1.7:
-    resolution: {integrity: sha512-IqCNJw1fyjkSZkSf2sB/IMKfCxLv5+9aAUo6lEpfnR60vP33pbCxLzcZDVDcIpcaTSbe3DHcH5DYNu+C1v8yvQ==}
+  /@ruvector/sona-linux-x64-gnu@0.1.8:
+    resolution: {integrity: sha512-5dtjvRk/buod4JBnfJaSXLWwvOTkDTt8l8yiK53VfIBeTHLVD4HxCs2UXOanf367KNKrSWlIkssE/UCtX8jtUQ==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
@@ -6021,8 +5925,8 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/sona-linux-x64-musl@0.1.7:
-    resolution: {integrity: sha512-zMCvbcgl7h8GLLOLFqDx1ud+hHHhzSoHbLmvVOuW+U0ARbtwJTu4piyzvm4KuPnfTEn6jTgQsNU2wEUfh8dIjg==}
+  /@ruvector/sona-linux-x64-musl@0.1.8:
+    resolution: {integrity: sha512-9f9ZYzvUuuUrUoZOAtXRfG0ZEDEOJj8+1hnyk7Yf9yj7taocb048tTcKDRrHmAiUBOgt8Nm9Qo+TetvxVnkKYA==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
@@ -6036,8 +5940,8 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/sona-win32-arm64-msvc@0.1.7:
-    resolution: {integrity: sha512-9VHEEImhrG6s56Jj4VfXbQ8HfJZ02K/3nYWHpgeJnIdSglkGIOJiplFLeCbvFrfBvFWTL9TmtXUrxpIRxNKkFQ==}
+  /@ruvector/sona-win32-arm64-msvc@0.1.8:
+    resolution: {integrity: sha512-LKhT9x9Tkz4SvEKO5PSjj0fj30hSS4DYmWd+mxf2y1iF9GfDzWxy2OxTkDJ8t/fT9YD+N7Da32lfRrWcKzc3AA==}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
@@ -6051,8 +5955,8 @@ packages:
     dev: false
     optional: true
 
-  /@ruvector/sona-win32-x64-msvc@0.1.7:
-    resolution: {integrity: sha512-bVLG2GKAyb1uhm+p7ngLAR3Z6ocl0lukd0OLbJ8K6Cf4Cdz9RQgEytajyucyoaPr9tV3LkAhM41Ibiwks4eVoA==}
+  /@ruvector/sona-win32-x64-msvc@0.1.8:
+    resolution: {integrity: sha512-eu1GbQ3RjhrKuT4cKoYT56RLCJ7v30iBlVSh+I9lUCE6CNFvyejQwTL+I/g1eIpT4LX/i2g2YEWzYFeFQrhaew==}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
@@ -6071,17 +5975,17 @@ packages:
       '@ruvector/sona-win32-x64-msvc': 0.1.5
     dev: false
 
-  /@ruvector/sona@0.1.7:
-    resolution: {integrity: sha512-TR112g0QoiwavKGk+bogNm++F7LDZ4ko47pR1L/b0kuWfNi8FiW8CVLI/7GSIAJPS3VEfI86Cm7HYiEedc/dTQ==}
+  /@ruvector/sona@0.1.8:
+    resolution: {integrity: sha512-IzeaJr0hH7E55vya00ruSKtqZ7qNfqeTwUPnDOusZR+A0IczX+6p8y7mKO74kYc66ozlyfFg1StAvyE+W3ROoA==}
     engines: {node: '>= 16'}
     optionalDependencies:
-      '@ruvector/sona-darwin-arm64': 0.1.7
-      '@ruvector/sona-darwin-x64': 0.1.7
-      '@ruvector/sona-linux-arm64-gnu': 0.1.7
-      '@ruvector/sona-linux-x64-gnu': 0.1.7
-      '@ruvector/sona-linux-x64-musl': 0.1.7
-      '@ruvector/sona-win32-arm64-msvc': 0.1.7
-      '@ruvector/sona-win32-x64-msvc': 0.1.7
+      '@ruvector/sona-darwin-arm64': 0.1.8
+      '@ruvector/sona-darwin-x64': 0.1.8
+      '@ruvector/sona-linux-arm64-gnu': 0.1.8
+      '@ruvector/sona-linux-x64-gnu': 0.1.8
+      '@ruvector/sona-linux-x64-musl': 0.1.8
+      '@ruvector/sona-win32-arm64-msvc': 0.1.8
+      '@ruvector/sona-win32-x64-msvc': 0.1.8
 
   /@ruvector/tiny-dancer-darwin-arm64@0.1.15:
     resolution: {integrity: sha512-99vy9OLjppPj3kjusQnirgLvOnBt6Jrt2pij3Fvs5pzyp+zh04gb1np0tFR4JCxftKnuoKYqN7bCtQvgQbBBSg==}
@@ -7016,7 +6920,7 @@ packages:
       '@vitest/spy': 4.0.16
       estree-walker: 3.0.3
       magic-string: 0.30.21
-      vite: 8.0.10(@types/node@20.19.27)(esbuild@0.27.2)
+      vite: 8.0.10(@types/node@20.19.27)(tsx@4.21.0)
     dev: true
 
   /@vitest/pretty-format@2.1.9:
@@ -7338,7 +7242,7 @@ packages:
       '@ruvector/graph-node': 0.1.26
       '@ruvector/router': 0.1.30
       '@ruvector/ruvllm': 0.2.4
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       ajv: 8.20.0
       chalk: 5.6.2
       cli-table3: 0.6.5
@@ -7398,7 +7302,7 @@ packages:
       '@ruvector/graph-node': 0.1.26
       '@ruvector/router': 0.1.30
       '@ruvector/ruvllm': 0.2.4
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       ajv: 8.20.0
       chalk: 5.6.2
       cli-table3: 0.6.5
@@ -7472,7 +7376,7 @@ packages:
       '@ruvector/gnn': 0.1.25
       '@ruvector/graph-node': 2.0.4
       '@ruvector/router': 0.1.30
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       chalk: 5.6.2
       cli-table3: 0.6.5
       commander: 12.1.0
@@ -7516,7 +7420,7 @@ packages:
       '@ruvector/rvf-node': 0.1.8
       '@ruvector/rvf-solver': 0.1.8
       '@ruvector/rvf-wasm': 0.1.7
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       '@xenova/transformers': 2.17.2
       argon2: 0.44.0
       better-sqlite3: 11.10.0
@@ -7690,7 +7594,7 @@ packages:
     optionalDependencies:
       '@rollup/rollup-darwin-arm64': 4.62.2
       '@ruvector/attention': 0.1.32
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       agentdb: 3.0.0-alpha.17(@types/node@20.19.27)(zod@3.25.76)
       better-sqlite3: 11.10.0
       onnxruntime-node: 1.27.0
@@ -7746,7 +7650,7 @@ packages:
       zod: 3.25.76
     optionalDependencies:
       '@ruvector/attention': 0.1.32
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       agentdb: 2.0.0-alpha.3.7(@types/node@20.19.27)(express@5.2.1)(marked@11.2.0)
       better-sqlite3: 11.10.0
       onnxruntime-node: 1.27.0
@@ -7783,7 +7687,7 @@ packages:
       '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
       '@google/genai': 1.52.0(@modelcontextprotocol/sdk@1.29.0)
       '@octokit/rest': 21.1.1
-      '@ruvector/graph-node': 2.0.2
+      '@ruvector/graph-node': 2.0.4
       '@supabase/supabase-js': 2.110.2
       '@types/validator': 13.15.10
       '@xenova/transformers': 2.17.2
@@ -12843,7 +12747,7 @@ packages:
       '@ruvector/attention': 0.1.32
       '@ruvector/core': 0.1.31
       '@ruvector/gnn': 0.1.25
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       chalk: 4.1.2
       commander: 11.1.0
       ora: 5.4.1
@@ -12863,7 +12767,7 @@ packages:
       '@ruvector/attention': 0.1.32
       '@ruvector/core': 0.1.31
       '@ruvector/gnn': 0.1.25
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       '@xenova/transformers': 2.17.2
       chalk: 4.1.2
       commander: 11.1.0
@@ -12887,7 +12791,7 @@ packages:
       '@ruvector/attention': 0.1.32
       '@ruvector/core': 0.1.31
       '@ruvector/gnn': 0.1.25
-      '@ruvector/sona': 0.1.7
+      '@ruvector/sona': 0.1.8
       '@xenova/transformers': 2.17.2
       chalk: 4.1.2
       commander: 11.1.0
