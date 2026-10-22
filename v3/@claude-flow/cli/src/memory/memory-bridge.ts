@@ -81,7 +81,6 @@ async function getRegistry(dbPath?: string): Promise<any | null> {
         try {
           await registry.initialize({
             dbPath: dbPath || getDbPath(),
-            embeddingModel: 'Xenova/all-MiniLM-L6-v2',
             dimension: 384,
             controllers: {
               reasoningBank: true,
@@ -1776,3 +1775,4 @@ function cosineSim(a: number[], b: number[]): number {
   const mag = Math.sqrt(normA * normB);
   return mag === 0 ? 0 : dot / mag;
 }
+
