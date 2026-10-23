@@ -116,8 +116,6 @@
 		"zod": "^3.22.3"
 	},
 	"overrides": {
-		"@reflink/reflink": "file:stub/@reflink/reflink",
-		"@hono/node-server": ">=1.19.13",
-		"follow-redirects": ">=1.16.0"
+		"@reflink/reflink": "file:stub/@reflink/reflink"
 	}
 }
