@@ -210,14 +210,14 @@
     "test": "tests"
   },
   "overrides": {
-    "axios": ">=1.15.0",
+    "axios": ">=1.15.1",
     "basic-ftp": ">=5.3.0",
     "follow-redirects": ">=1.16.0",
     "protobufjs": ">=7.5.5"
   },
   "pnpm": {
     "overrides": {
-      "axios": ">=1.15.0",
+      "axios": ">=1.15.1",
       "basic-ftp": ">=5.3.0",
       "follow-redirects": ">=1.16.0",
       "protobufjs": ">=7.5.5"
