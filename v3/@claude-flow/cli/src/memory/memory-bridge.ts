@@ -81,7 +81,6 @@ async function getRegistry(dbPath?: string): Promise<any | null> {
         try {
           await registry.initialize({
             dbPath: dbPath || getDbPath(),
-            embeddingModel: 'Xenova/all-MiniLM-L6-v2',
             dimension: 384,
             controllers: {
               reasoningBank: true,
