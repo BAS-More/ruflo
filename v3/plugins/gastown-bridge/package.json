@@ -89,7 +89,7 @@
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
-    "uuid": "^14.0.0",
+    "uuid": "^14.0.3",
     "zod": "^3.22.0"
   },
   "devDependencies": {
@@ -103,7 +103,6 @@
     "typescript": "^5.4.0",
     "vitest": "^4.1.4"
   },
-  "optionalDependencies": {},
   "overrides": {
     "vite": ">=7.3.2",
     "brace-expansion": ">=2.0.3",
