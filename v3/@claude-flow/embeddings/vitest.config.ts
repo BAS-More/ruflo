@@ -15,7 +15,7 @@ export default defineConfig({
     restoreMocks: true,
     testTimeout: 10000,
     // Vitest 4 removed `poolOptions`; `singleFork` maps to `maxWorkers: 1`.
-    // The old `--max-old-space-size` execArgv was already ignored on Vitest 4
+    // The old Node heap-limit execArgv was already ignored on Vitest 4
     // and only masked the chunkByCharacter infinite loop (fixed in src).
     pool: 'forks',
     maxWorkers: 1,
