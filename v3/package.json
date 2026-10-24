@@ -70,7 +70,7 @@
       "handlebars": "^4.7.10",
       "hono": "^4.12.25",
       "lodash-es": ">=4.18.0",
-      "path-to-regexp": ">=8.4.0",
+      "path-to-regexp@8": "^8.4.0",
       "protobufjs": "^8.4.1",
       "vite": "8.3.4",
       "@mapbox/node-pre-gyp": ">=2.0.0",
