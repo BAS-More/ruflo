@@ -87,6 +87,47 @@ describe('ThreatDetectionService', () => {
 
       expect(result.piiFound).toBe(true);
     });
+
+    it('should detect the same PII on repeated calls (global regex lastIndex is reset)', () => {
+      // The PII patterns are module-level /g regexes. Without resetting
+      // lastIndex, a second test() on the same input resumes after the first
+      // match and misses it.
+      const fakeKey = ['sk', 'ant', 'api03', 'A'.repeat(95)].join('-');
+      const inputs = [`key: ${fakeKey}`, 'My email is test@example.com', 'SSN: 123-45-6789'];
+
+      const service = createThreatDetectionService();
+      for (const input of inputs) {
+        expect(service.detect(input).piiFound).toBe(true);
+        expect(service.detect(input).piiFound).toBe(true);
+        expect(service.detectPII(input)).toBe(true);
+      }
+
+      // The patterns are shared, so a second service instance must not be affected either
+      const other = createThreatDetectionService();
+      for (const input of inputs) {
+        expect(other.detect(input).piiFound).toBe(true);
+      }
+    });
+
+    it('should detect repeatedly with custom global patterns', () => {
+      const service = createThreatDetectionService([
+        {
+          pattern: /forbidden phrase/gi,
+          type: 'jailbreak',
+          severity: 'high',
+          description: 'Custom global pattern',
+          baseConfidence: 0.9,
+        },
+      ]);
+
+      for (let i = 0; i < 3; i++) {
+        const result = service.detect('this contains a forbidden phrase here');
+        expect(result.safe).toBe(false);
+        expect(result.threats).toHaveLength(1);
+        expect(result.threats[0].location).toEqual({ start: 16, end: 32 });
+        expect(service.quickScan('this contains a forbidden phrase here').threat).toBe(true);
+      }
+    });
   });
 
   describe('quickScan()', () => {

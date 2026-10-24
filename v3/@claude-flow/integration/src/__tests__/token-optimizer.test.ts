@@ -126,6 +126,28 @@ describe('TokenOptimizer', () => {
       expect(['agent-booster', 'traditional']).toContain(result.method);
     });
 
+    it('should count each agent-booster edit exactly once', async () => {
+      const methods = ['agent-booster', 'traditional', 'agent-booster'];
+      const booster = new TokenOptimizer();
+      // Inject the Agent Booster dependency directly (the real agentic-flow
+      // build may not be importable); only the stats bookkeeping is under test.
+      (booster as any).agentBooster = {
+        editCode: async () => ({ method: methods.shift(), speedupFactor: 2, executionTimeMs: 1 }),
+      };
+
+      const first = await booster.optimizedEdit('/a.ts', 'a', 'b', 'typescript');
+      expect(first).toEqual({ speedupFactor: 2, executionMs: 1, method: 'agent-booster' });
+      expect(booster.getStats().editsOptimized).toBe(1);
+
+      // An edit the booster handled the traditional way is not an optimized edit
+      const fallback = await booster.optimizedEdit('/b.ts', 'a', 'b', 'typescript');
+      expect(fallback.method).toBe('traditional');
+      expect(booster.getStats().editsOptimized).toBe(1);
+
+      await booster.optimizedEdit('/c.ts', 'a', 'b', 'typescript');
+      expect(booster.getStats().editsOptimized).toBe(2);
+    });
+
     it('should track edits optimized', async () => {
       const before = optimizer.getStats().editsOptimized;
       await optimizer.optimizedEdit('/test.ts', 'a', 'b', 'typescript');

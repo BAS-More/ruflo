@@ -663,7 +663,8 @@ describe('Full Workflow Integration Tests', () => {
     const result = await workflowEngine.executeWorkflow(mainWorkflow);
 
     expect(result.status).toBe('completed');
-    expect(result.tasksCompleted).toBeGreaterThanOrEqual(4); // 2 main + 2 sub
+    expect(result.tasksCompleted).toBe(4); // 2 main + 2 sub (the container is not a leaf task)
+    expect(result.executionOrder).toEqual(['main-task-1', 'nested-workflow', 'main-task-2']);
   });
 
   it('should provide comprehensive workflow debugging', async () => {
