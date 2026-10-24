@@ -19,6 +19,10 @@ jobs:
   test:
     name: Test V3 Packages
     runs-on: ubuntu-latest
+    # Generous ceiling so a hung test fails the job instead of running to the
+    # 6-hour default. To be tightened once full runs of the repaired suite have
+    # been measured.
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
