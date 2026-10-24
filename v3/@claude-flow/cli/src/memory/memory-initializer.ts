@@ -1563,7 +1563,12 @@ export async function loadEmbeddingModel(options?: {
     }
 
     // Fallback: Check for agentic-flow ReasoningBank embeddings (v3)
-    const reasoningBank = await import('agentic-flow/reasoningbank').catch(() => null);
+    // importOptional, not import().catch(): see services/optional-import.ts (Node 20 crash)
+    const { importOptional, TRANSFORMERS_NATIVE_PROBE } = await import('../services/optional-import.js');
+    const reasoningBank = await importOptional<typeof import('agentic-flow/reasoningbank')>(
+      'agentic-flow/reasoningbank',
+      TRANSFORMERS_NATIVE_PROBE,
+    );
 
     if (reasoningBank?.computeEmbedding) {
       if (verbose) {
@@ -1624,7 +1629,10 @@ export async function loadEmbeddingModel(options?: {
     }
 
     // Legacy fallback: Check for agentic-flow core embeddings
-    const agenticFlow = await import('agentic-flow').catch(() => null);
+    const agenticFlow = await importOptional<typeof import('agentic-flow')>(
+      'agentic-flow',
+      TRANSFORMERS_NATIVE_PROBE,
+    );
 
     if (agenticFlow && (agenticFlow as any).embeddings) {
       if (verbose) {
