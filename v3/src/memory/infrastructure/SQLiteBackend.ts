@@ -18,6 +18,7 @@
  * Pass ':memory:' (or an empty string) as `dbPath` for a non-persistent store.
  */
 
+import { randomUUID } from 'crypto';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import type {
@@ -39,9 +40,10 @@ export class SQLiteBackend implements MemoryBackend {
   private dbPath: string;
   private memories: Map<string, Memory>;
   private initialized: boolean = false;
+  /** Shared by concurrent first calls so the file is loaded exactly once. */
+  private initPromise: Promise<void> | undefined;
   /** Serialises file writes so concurrent mutations cannot interleave renames. */
   private writeChain: Promise<void> = Promise.resolve();
-  private tmpCounter = 0;
 
   constructor(dbPath: string) {
     this.dbPath = dbPath;
@@ -50,19 +52,28 @@ export class SQLiteBackend implements MemoryBackend {
 
   /**
    * Open the database: load any existing data stored at dbPath.
+   * Concurrent calls share one load; a failed load can be retried.
    */
-  async initialize(): Promise<void> {
-    if (this.initialized) return;
+  initialize(): Promise<void> {
+    if (this.initialized) return Promise.resolve();
+    if (!this.initPromise) {
+      this.initPromise = this.load().catch((error) => {
+        this.initPromise = undefined;
+        throw error;
+      });
+    }
+    return this.initPromise;
+  }
 
-    this.memories = new Map();
+  private async load(): Promise<void> {
+    const memories = new Map<string, Memory>();
     if (this.isPersistent()) {
       await fs.mkdir(path.dirname(this.dbPath), { recursive: true });
-      const loaded = await this.readDatabaseFile();
-      for (const memory of loaded) {
-        this.memories.set(memory.id, memory);
+      for (const memory of await this.readDatabaseFile()) {
+        memories.set(memory.id, memory);
       }
     }
-
+    this.memories = memories;
     this.initialized = true;
   }
 
@@ -73,9 +84,11 @@ export class SQLiteBackend implements MemoryBackend {
    * data on disk stays and is reloaded by the next initialize().
    */
   async close(): Promise<void> {
+    await this.initPromise?.catch(() => undefined);
     await this.writeChain;
     this.memories.clear();
     this.initialized = false;
+    this.initPromise = undefined;
   }
 
   /**
@@ -83,8 +96,10 @@ export class SQLiteBackend implements MemoryBackend {
    */
   async store(memory: Memory): Promise<Memory> {
     await this.ensureInitialized();
-    this.memories.set(memory.id, { ...memory });
-    await this.persist();
+    const previous = this.memories.get(memory.id);
+    const next = { ...memory };
+    this.memories.set(memory.id, next);
+    await this.persist(() => this.restore(memory.id, next, previous));
     return memory;
   }
 
@@ -101,9 +116,11 @@ export class SQLiteBackend implements MemoryBackend {
    */
   async update(memory: Memory): Promise<void> {
     await this.ensureInitialized();
-    if (this.memories.has(memory.id)) {
-      this.memories.set(memory.id, { ...memory });
-      await this.persist();
+    const previous = this.memories.get(memory.id);
+    if (previous) {
+      const next = { ...memory };
+      this.memories.set(memory.id, next);
+      await this.persist(() => this.restore(memory.id, next, previous));
     }
   }
 
@@ -112,8 +129,9 @@ export class SQLiteBackend implements MemoryBackend {
    */
   async delete(id: string): Promise<void> {
     await this.ensureInitialized();
-    if (this.memories.delete(id)) {
-      await this.persist();
+    const previous = this.memories.get(id);
+    if (previous && this.memories.delete(id)) {
+      await this.persist(() => this.restore(id, undefined, previous));
     }
   }
 
@@ -179,15 +197,17 @@ export class SQLiteBackend implements MemoryBackend {
    */
   async clearAgent(agentId: string): Promise<void> {
     await this.ensureInitialized();
-    let changed = false;
+    const removed: Memory[] = [];
     for (const [id, memory] of this.memories.entries()) {
       if (memory.agentId === agentId) {
         this.memories.delete(id);
-        changed = true;
+        removed.push(memory);
       }
     }
-    if (changed) {
-      await this.persist();
+    if (removed.length > 0) {
+      await this.persist(() => {
+        for (const memory of removed) this.restore(memory.id, undefined, memory);
+      });
     }
   }
 
@@ -264,26 +284,44 @@ export class SQLiteBackend implements MemoryBackend {
   }
 
   /**
-   * Write the current contents to dbPath atomically (tmp file + rename).
-   * Writes are queued so they land on disk in mutation order.
+   * Undo one in-memory mutation after its write failed, unless a later
+   * mutation has already replaced that entry.
    */
-  private persist(): Promise<void> {
+  private restore(id: string, applied: Memory | undefined, previous: Memory | undefined): void {
+    if (this.memories.get(id) !== applied) return;
+    if (previous) {
+      this.memories.set(id, previous);
+    } else {
+      this.memories.delete(id);
+    }
+  }
+
+  /**
+   * Write the current contents to dbPath atomically (tmp file + rename).
+   * Writes are queued so they land on disk in mutation order. The snapshot is
+   * taken when the write runs, and a failed write calls `rollback` before the
+   * next queued write starts, so a failed mutation is never persisted later
+   * and memory never stays ahead of disk.
+   */
+  private persist(rollback: () => void): Promise<void> {
     if (!this.isPersistent()) {
       return Promise.resolve();
     }
 
-    const snapshot: PersistedDatabase = {
-      version: FILE_FORMAT_VERSION,
-      memories: Array.from(this.memories.values())
-    };
-    const data = JSON.stringify(snapshot);
-    const tmpPath = `${this.dbPath}.${process.pid}.${++this.tmpCounter}.tmp`;
+    // Unique per write, so two instances (or processes) sharing dbPath never
+    // write to the same temporary file.
+    const tmpPath = `${this.dbPath}.${process.pid}.${randomUUID()}.tmp`;
 
     const write = async (): Promise<void> => {
       try {
-        await fs.writeFile(tmpPath, data, 'utf8');
+        const snapshot: PersistedDatabase = {
+          version: FILE_FORMAT_VERSION,
+          memories: Array.from(this.memories.values())
+        };
+        await fs.writeFile(tmpPath, JSON.stringify(snapshot), 'utf8');
         await fs.rename(tmpPath, this.dbPath);
       } catch (error) {
+        rollback();
         await fs.rm(tmpPath, { force: true }).catch(() => undefined);
         throw error;
       }

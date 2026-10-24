@@ -4,6 +4,7 @@ import { AgentDBBackend } from '../../src/memory/infrastructure/AgentDBBackend';
 import { SQLiteBackend } from '../../src/memory/infrastructure/SQLiteBackend';
 import { Memory } from '../../src/memory/domain/Memory';
 import * as fs from 'fs/promises';
+import { promises as fsPromises } from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
@@ -494,5 +495,77 @@ describe('SQLiteBackend durability (ADR-009 persistent storage)', () => {
     await reopened.initialize();
     expect(await reopened.retrieve('volatile')).toBeUndefined();
     expect(await fs.readdir(dir)).toEqual([]);
+  });
+
+  it('lets two instances on the same dbPath write concurrently without clobbering temp files', async () => {
+    const a = new SQLiteBackend(dbPath);
+    const b = new SQLiteBackend(dbPath);
+    await Promise.all([a.initialize(), b.initialize()]);
+
+    // fs.promises is the same object SQLiteBackend writes through.
+    const writeSpy = vi.spyOn(fsPromises, 'writeFile');
+    await Promise.all(
+      Array.from({ length: 10 }, (_, i) => [a.store(mem(`a-${i}`)), b.store(mem(`b-${i}`))]).flat()
+    );
+    await Promise.all([a.close(), b.close()]);
+
+    const tmpPaths = writeSpy.mock.calls.map(([target]) => String(target));
+    writeSpy.mockRestore();
+    expect(tmpPaths).toHaveLength(20);
+    expect(new Set(tmpPaths).size).toBe(20);
+
+    expect(await fs.readdir(path.dirname(dbPath))).toEqual(['memory.db']);
+    const onDisk = JSON.parse(await fs.readFile(dbPath, 'utf8'));
+    expect(onDisk.version).toBe(1);
+    expect(onDisk.memories.length).toBeGreaterThan(0);
+  });
+
+  it('rolls back the in-memory change when the write fails, and never persists it later', async () => {
+    const backend = new SQLiteBackend(dbPath);
+    await backend.initialize();
+    await backend.store(mem('kept'));
+
+    // Make the next atomic rename fail: a directory now sits at dbPath.
+    await fs.rm(dbPath);
+    await fs.mkdir(dbPath);
+
+    await expect(backend.store(mem('lost'))).rejects.toThrow();
+    expect(await backend.retrieve('lost')).toBeUndefined();
+
+    await expect(backend.update({ ...mem('kept'), content: 'changed' })).rejects.toThrow();
+    expect((await backend.retrieve('kept'))?.content).toBe('content of kept');
+
+    await expect(backend.delete('kept')).rejects.toThrow();
+    expect(await backend.retrieve('kept')).toBeDefined();
+
+    await expect(backend.clearAgent('agent-1')).rejects.toThrow();
+    expect(backend.getCount()).toBe(1);
+
+    // Once writes work again, only successful mutations reach disk.
+    await fs.rm(dbPath, { recursive: true });
+    await backend.store(mem('after'));
+    await backend.close();
+
+    const reopened = new SQLiteBackend(dbPath);
+    expect((await reopened.query({})).map(m => m.id).sort()).toEqual(['after', 'kept']);
+    expect((await reopened.retrieve('kept'))?.content).toBe('content of kept');
+    await reopened.close();
+  });
+
+  it('shares one load between concurrent initialize() calls and can retry after a failed load', async () => {
+    const backend = new SQLiteBackend(dbPath);
+    const first = backend.initialize();
+    const second = backend.initialize();
+    expect(second).toBe(first);
+    await first;
+    await backend.close();
+
+    await fs.writeFile(dbPath, 'not json', 'utf8');
+    const broken = new SQLiteBackend(dbPath);
+    await expect(broken.initialize()).rejects.toThrow(/not a readable memory database/);
+    await fs.rm(dbPath);
+    await expect(broken.initialize()).resolves.toBeUndefined();
+    expect(broken.getCount()).toBe(0);
+    await broken.close();
   });
 });
