@@ -37,14 +37,17 @@ importers:
         specifier: ^20.0.0
         version: 20.19.27
       '@vitest/coverage-v8':
-        specifier: ^4.0.16
-        version: 4.0.16(vitest@4.1.12)
+        specifier: ^4.1.0
+        version: 4.1.12(vitest@4.1.12)
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
 
   '@claude-flow/aidefence':
     dependencies:
@@ -60,7 +63,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/browser':
     dependencies:
@@ -85,7 +88,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/claims':
     dependencies:
@@ -110,7 +113,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/cli':
     dependencies:
@@ -126,6 +129,9 @@ importers:
       semver:
         specifier: ^7.6.0
         version: 7.7.3
+      sql.js:
+        specifier: ^1.10.3
+        version: 1.13.0
     optionalDependencies:
       '@claude-flow/aidefence':
         specifier: ^3.0.2
@@ -172,7 +178,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/codex':
     dependencies:
@@ -215,7 +221,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/deployment':
     dependencies:
@@ -228,7 +234,7 @@ importers:
         version: 25.0.2(typescript@5.9.3)
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/embeddings':
     dependencies:
@@ -253,7 +259,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/guidance':
     dependencies:
@@ -275,7 +281,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/hooks':
     dependencies:
@@ -307,7 +313,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/integration':
     dependencies:
@@ -321,7 +327,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/mcp':
     dependencies:
@@ -352,7 +358,7 @@ importers:
         version: 8.18.1
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/memory':
     dependencies:
@@ -374,7 +380,7 @@ importers:
         version: 1.4.9
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/neural':
     dependencies:
@@ -400,7 +406,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/plugins':
     dependencies:
@@ -428,7 +434,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/providers':
     dependencies:
@@ -453,7 +459,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/security':
     dependencies:
@@ -469,7 +475,7 @@ importers:
         version: 5.0.2
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/shared':
     dependencies:
@@ -503,7 +509,7 @@ importers:
         version: 7.2.0
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
       ws:
         specifier: ^8.20.1
         version: 8.22.0
@@ -515,7 +521,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
   '@claude-flow/testing':
     devDependencies:
@@ -527,13 +533,13 @@ importers:
         version: link:../shared
       '@claude-flow/swarm':
         specifier: ^3.0.0-alpha.1
-        version: link:../swarm
+        version: 3.0.2
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
 
 packages:
 
@@ -712,8 +718,8 @@ packages:
       js-tokens: 4.0.0
       picocolors: 1.1.1
 
-  /@babel/helper-string-parser@7.27.1:
-    resolution: {integrity: sha512-qMlSxKbpRlAridDExk92nSobyDdpPijUq2DW6oDnUqd0iOGxmQjyqhMIihI9+zv4LPyZdRje2cavWPbCbWm3eA==}
+  /@babel/helper-string-parser@7.29.11:
+    resolution: {integrity: sha512-snZbO7MEDOof+hvNa97EjEY7qD7h2kwvQr5AJC3ZhQudKW5dnej6k3kP9NQV88hJwaS8vDqRLFo9rivLEhle2g==}
     engines: {node: '>=6.9.0'}
     dev: true
 
@@ -721,12 +727,17 @@ packages:
     resolution: {integrity: sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==}
     engines: {node: '>=6.9.0'}
 
-  /@babel/parser@7.28.5:
-    resolution: {integrity: sha512-KKBU1VGYR7ORr3At5HAtUQ+TV3SzRCXmA/8OdDZiLDBIZxVyzXuztPjfLd3BV1PRAQGCMWWSHYhL0F8d5uHBDQ==}
+  /@babel/helper-validator-identifier@7.29.7:
+    resolution: {integrity: sha512-qehxGkRj55h/ff8EMaJ+cYhyaKlHIxqYDn682wQD7RNp9UujOQsHog2uS0r2vzr4pW+sXf90NeeayjcNaX3fFg==}
+    engines: {node: '>=6.9.0'}
+    dev: true
+
+  /@babel/parser@7.29.11:
+    resolution: {integrity: sha512-OZ6+oaK7GMyg3IfCpj8JOmn8n+w2rJbDT0LLfVDTLb1ZFeKDh3AiNELgCMUw175IJHSkLl74hG0M0VLsvx+gag==}
     engines: {node: '>=6.0.0'}
     hasBin: true
     dependencies:
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.11
     dev: true
 
   /@babel/runtime@7.28.4:
@@ -734,12 +745,12 @@ packages:
     engines: {node: '>=6.9.0'}
     dev: false
 
-  /@babel/types@7.28.5:
-    resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
+  /@babel/types@7.29.11:
+    resolution: {integrity: sha512-WCsemW40Cpc6gouC1SrY6PBaZ+oLRlEVY9XBvZBI7il/HyUrb2nJ505wE1MHEFyDZNnrWDEuy4jL50WVHfTTSQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/helper-string-parser': 7.27.1
-      '@babel/helper-validator-identifier': 7.28.5
+      '@babel/helper-string-parser': 7.29.11
+      '@babel/helper-validator-identifier': 7.29.7
     dev: true
 
   /@bcoe/v8-coverage@1.0.2:
@@ -985,6 +996,10 @@ packages:
     dependencies:
       sql.js: 1.14.1
     dev: false
+
+  /@claude-flow/swarm@3.0.2:
+    resolution: {integrity: sha512-pyFRl+GSdvSCYPJYZv7RcKpVBtq7//u97wqetd4r/d5pIbqCfczTRMaC1FjuPEs3NdnIiI1uodgYasKU/9wS6A==}
+    dev: true
 
   /@colors/colors@1.5.0:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -5645,7 +5660,7 @@ packages:
       mime: 4.1.0
       p-filter: 4.1.0
       semantic-release: 25.0.2(typescript@5.9.3)
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.16
       undici: 7.24.8
       url-join: 5.0.0
     transitivePeerDependencies:
@@ -6242,29 +6257,26 @@ packages:
       - '@swc/helpers'
     dev: false
 
-  /@vitest/coverage-v8@4.0.16(vitest@4.1.12):
-    resolution: {integrity: sha512-2rNdjEIsPRzsdu6/9Eq0AYAzYdpP6Bx9cje9tL3FE5XzXRQF1fNU9pe/1yE8fCrS0HD+fBtt6gLPh6LI57tX7A==}
+  /@vitest/coverage-v8@4.1.12(vitest@4.1.12):
+    resolution: {integrity: sha512-6S7/iVknKglLAxMFxQGNppBI0iqJS2NgM6FBxavitj7KaDq/vywOWGf6dGu7F2L1Qy0G6S3uTp7aGshHrzK8JA==}
     peerDependencies:
-      '@vitest/browser': 4.0.16
-      vitest: 4.0.16
+      '@vitest/browser': 4.1.12
+      vitest: 4.1.12
     peerDependenciesMeta:
       '@vitest/browser':
         optional: true
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
-      '@vitest/utils': 4.0.16
-      ast-v8-to-istanbul: 0.3.10
+      '@vitest/utils': 4.1.12
+      ast-v8-to-istanbul: 1.0.7
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
-      istanbul-lib-source-maps: 5.0.6
       istanbul-reports: 3.2.0
-      magicast: 0.5.1
+      magicast: 0.5.5
       obug: 2.1.1
-      std-env: 3.10.0
-      tinyrainbow: 3.0.3
-      vitest: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10)
-    transitivePeerDependencies:
-      - supports-color
+      std-env: 4.3.0
+      tinyrainbow: 3.2.0
+      vitest: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10)
     dev: true
 
   /@vitest/expect@4.1.12:
@@ -6295,12 +6307,6 @@ packages:
       vite: 8.0.10(@types/node@20.19.27)(tsx@4.21.0)
     dev: true
 
-  /@vitest/pretty-format@4.0.16:
-    resolution: {integrity: sha512-eNCYNsSty9xJKi/UdVD8Ou16alu7AYiS2fCPRs0b1OdhJiV89buAXQLpTbe+X8V9L6qrs9CqyvU7OaAopJYPsA==}
-    dependencies:
-      tinyrainbow: 3.0.3
-    dev: true
-
   /@vitest/pretty-format@4.1.12:
     resolution: {integrity: sha512-XW9O8+Mxx4VpCtkYdMJLZQQwsVryP9wk7cPKDxtXFfwSak6yRh5+2fep/Y0XF/ElBvJHq8bcYdi6aeuai0opZA==}
     dependencies:
@@ -6325,13 +6331,6 @@ packages:
 
   /@vitest/spy@4.1.12:
     resolution: {integrity: sha512-RGq9x4JNGNTZHEJxvN0oSiJjeSCExm0n2gZKKJZHY9cX5AVA6M7VJILBT3ZJ/tJ/0J9uWT7fETV9/btoi//vSg==}
-    dev: true
-
-  /@vitest/utils@4.0.16:
-    resolution: {integrity: sha512-h8z9yYhV3e1LEfaQ3zdypIrnAg/9hguReGZoS7Gl0aBG5xgA410zBqECqmaF/+RkTggRsfnzc1XaAHA6bmUufA==}
-    dependencies:
-      '@vitest/pretty-format': 4.0.16
-      tinyrainbow: 3.0.3
     dev: true
 
   /@vitest/utils@4.1.12:
@@ -7192,12 +7191,12 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /ast-v8-to-istanbul@0.3.10:
-    resolution: {integrity: sha512-p4K7vMz2ZSk3wN8l5o3y2bJAoZXT3VuJI5OLTATY/01CYWumWvwkUw0SqDBnNq6IiTO3qDa1eSQDibAV8g7XOQ==}
+  /ast-v8-to-istanbul@1.0.7:
+    resolution: {integrity: sha512-kFL68AG6ajd8fg248zwM9GQrUWEp79gsmjum34OEXjs4yHuUMZfYKwOLW9GMmB4oNvVrj+EAGxsP7ye2UR9UlA==}
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       estree-walker: 3.0.3
-      js-tokens: 9.0.1
+      js-tokens: 10.0.0
     dev: true
 
   /asynckit@0.4.0:
@@ -9576,17 +9575,6 @@ packages:
       supports-color: 7.2.0
     dev: true
 
-  /istanbul-lib-source-maps@5.0.6:
-    resolution: {integrity: sha512-yg2d+Em4KizZC5niWhQaIomgf5WlL4vOOjZ5xGCmF8SnPE/mDWWXgvRExdcpCgh9lLRRa1/fSYp2ymmbJ1pI+A==}
-    engines: {node: '>=10'}
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.31
-      debug: 4.4.3
-      istanbul-lib-coverage: 3.2.2
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /istanbul-reports@3.2.0:
     resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
     engines: {node: '>=8'}
@@ -9618,12 +9606,12 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
+  /js-tokens@10.0.0:
+    resolution: {integrity: sha512-lM/UBzQmfJRo9ABXbPWemivdCW8V2G8FHaHdypQaIy523snUjog0W71ayWXTjiR+ixeMyVHN2XcpnTd/liPg/Q==}
+    dev: true
+
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
-
-  /js-tokens@9.0.1:
-    resolution: {integrity: sha512-mxa9E9ITFOt0ban3j6L5MpjwegGz6lBQmM1IJkWeBZGcMxto50+eWdjC/52xDbS2vy0k7vIMK0Fe2wfL9OQSpQ==}
-    dev: true
 
   /js-yaml@4.1.1:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
@@ -9980,11 +9968,11 @@ packages:
       '@jridgewell/sourcemap-codec': 1.5.5
     dev: true
 
-  /magicast@0.5.1:
-    resolution: {integrity: sha512-xrHS24IxaLrvuo613F719wvOIv9xPHFWQHuvGUBmPnCA/3MQxKI3b+r7n1jAoDHmsbC5bRhTZYR77invLAxVnw==}
+  /magicast@0.5.5:
+    resolution: {integrity: sha512-UicdXN8zQ3JHlxVq+28afMXPr1z7WNY6+7EJnzTdQWkTAlMLF5fNCCKxJHBQwGaNGR11581EiQmQzx73+MvszA==}
     dependencies:
-      '@babel/parser': 7.28.5
-      '@babel/types': 7.28.5
+      '@babel/parser': 7.29.11
+      '@babel/types': 7.29.11
       source-map-js: 1.2.1
     dev: true
 
@@ -10476,7 +10464,7 @@ packages:
     engines: {node: ^16.14.0 || >=18.0.0}
     dependencies:
       hosted-git-info: 7.0.2
-      semver: 7.7.3
+      semver: 7.7.4
       validate-npm-package-license: 3.0.4
 
   /normalize-package-data@8.0.0:
@@ -10484,7 +10472,7 @@ packages:
     engines: {node: ^20.17.0 || >=22.9.0}
     dependencies:
       hosted-git-info: 9.0.2
-      semver: 7.7.3
+      semver: 7.7.4
       validate-npm-package-license: 3.0.4
 
   /normalize-url@8.1.1:
@@ -12008,10 +11996,6 @@ packages:
     resolution: {integrity: sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw==}
     engines: {node: '>= 0.8'}
 
-  /std-env@3.10.0:
-    resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
-    dev: true
-
   /std-env@4.3.0:
     resolution: {integrity: sha512-OtU/EgQ1kIm5KwqQpBC6ZEMXrZRui11w8zgfTWp8cdO9B8OaPsbA8bTHO2P+HNo1VlUTGMVBwPhydu6poeXiag==}
     dev: true
@@ -12164,7 +12148,7 @@ packages:
       lines-and-columns: 1.2.4
       mz: 2.7.0
       pirates: 4.0.7
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.16
       ts-interface-checker: 0.1.13
     dev: true
 
@@ -12351,6 +12335,7 @@ packages:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
+    dev: true
 
   /tinyglobby@0.2.16:
     resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
@@ -12358,11 +12343,6 @@ packages:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-
-  /tinyrainbow@3.0.3:
-    resolution: {integrity: sha512-PSkbLUoxOFRzJYjjxHJt9xro7D+iilgMX/C9lawzVuYiIdcihh9DXmVibBe8lmcFrRi/VzlPjBxbN7rH24q8/Q==}
-    engines: {node: '>=14.0.0'}
-    dev: true
 
   /tinyrainbow@3.2.0:
     resolution: {integrity: sha512-LgO3D9yZJjApUiuUfl9iFAwrtaX4+lok3wJIqttGoKCHlWUqHqbQpnxCf82L8FjgKsh4iGo78hqJwgL8F6To2A==}
@@ -12788,7 +12768,7 @@ packages:
       fsevents: 2.3.3
     dev: false
 
-  /vitest@4.1.12(@opentelemetry/api@1.9.0)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10):
+  /vitest@4.1.12(@opentelemetry/api@1.9.0)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10):
     resolution: {integrity: sha512-5eWdz2yb3ajxWF3C8C4TjkXl7FGm3n2E/VlazALrQHzK7nYMSGFnCZto0bbPNl77AwkOZVLk0YnBAejUu0NiWA==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
     hasBin: true
@@ -12831,7 +12811,7 @@ packages:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@types/node': 20.19.27
-      '@vitest/coverage-v8': 4.0.16(vitest@4.1.12)
+      '@vitest/coverage-v8': 4.1.12(vitest@4.1.12)
       '@vitest/expect': 4.1.12
       '@vitest/mocker': 4.1.12(vite@8.0.10)
       '@vitest/pretty-format': 4.1.12
@@ -12856,7 +12836,7 @@ packages:
       - msw
     dev: true
 
-  /vitest@4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.0.16)(vite@8.0.10):
+  /vitest@4.1.12(@opentelemetry/api@1.9.1)(@types/node@20.19.27)(@vitest/coverage-v8@4.1.12)(vite@8.0.10):
     resolution: {integrity: sha512-5eWdz2yb3ajxWF3C8C4TjkXl7FGm3n2E/VlazALrQHzK7nYMSGFnCZto0bbPNl77AwkOZVLk0YnBAejUu0NiWA==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
     hasBin: true
@@ -12899,7 +12879,7 @@ packages:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@types/node': 20.19.27
-      '@vitest/coverage-v8': 4.0.16(vitest@4.1.12)
+      '@vitest/coverage-v8': 4.1.12(vitest@4.1.12)
       '@vitest/expect': 4.1.12
       '@vitest/mocker': 4.1.12(vite@8.0.10)
       '@vitest/pretty-format': 4.1.12
