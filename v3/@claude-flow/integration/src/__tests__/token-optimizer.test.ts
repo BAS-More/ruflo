@@ -3,7 +3,7 @@
  * Validates agentic-flow Agent Booster integration
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import { TokenOptimizer, getTokenOptimizer } from '../token-optimizer.js';
 
 describe('TokenOptimizer', () => {
@@ -23,10 +23,70 @@ describe('TokenOptimizer', () => {
       expect(typeof stats.agenticFlowAvailable).toBe('boolean');
     });
 
-    it('should detect agentic-flow availability', async () => {
-      const stats = optimizer.getStats();
-      // agentic-flow is installed in v3/node_modules
-      expect(stats.agenticFlowAvailable).toBe(true);
+    // Availability detection is tested against narrow mocks of the one external
+    // package, not against whatever agentic-flow build happens to be installed:
+    // the installed agentic-flow@2.0.0-alpha currently fails to import (its
+    // agentdb dependency moved dist/controllers), which made this environment-
+    // dependent. Both branches of the detection logic are asserted exactly.
+    describe('agentic-flow availability detection', () => {
+      // Re-import the optimizer after registering mocks so its dynamic
+      // import('agentic-flow') resolves against them, not a cached module.
+      const freshTokenOptimizer = async () => {
+        vi.resetModules();
+        return (await import('../token-optimizer.js')).TokenOptimizer;
+      };
+
+      afterEach(() => {
+        vi.doUnmock('agentic-flow');
+        vi.doUnmock('agentic-flow/reasoningbank');
+        vi.doUnmock('agentic-flow/agent-booster');
+      });
+
+      it('should detect agentic-flow when the module imports', async () => {
+        const agentBooster = { editCode: async () => ({ method: 'agent-booster' }) };
+        // Vitest module mocks throw on access to undeclared exports, so the
+        // optional configTuning export the optimizer probes is declared as absent.
+        vi.doMock('agentic-flow', () => ({ default: {}, configTuning: undefined }));
+        vi.doMock('agentic-flow/reasoningbank', () => ({
+          retrieveMemories: async () => [],
+          formatMemoriesForPrompt: () => '',
+        }));
+        vi.doMock('agentic-flow/agent-booster', () => ({ agentBooster }));
+        const Fresh = await freshTokenOptimizer();
+
+        const detected = new Fresh();
+        let initEvent: Record<string, boolean> | undefined;
+        detected.on('initialized', (e) => { initEvent = e; });
+        await detected.initialize();
+
+        expect(detected.getStats().agenticFlowAvailable).toBe(true);
+        expect(initEvent).toEqual({
+          agenticFlowAvailable: true,
+          reasoningBank: true,
+          agentBooster: true,
+          configTuning: false,
+        });
+      });
+
+      it('should report agentic-flow unavailable when the import throws', async () => {
+        vi.doMock('agentic-flow', () => {
+          throw new Error('Cannot find module agentic-flow');
+        });
+        const Fresh = await freshTokenOptimizer();
+
+        const missing = new Fresh();
+        let initEvent: Record<string, boolean> | undefined;
+        missing.on('initialized', (e) => { initEvent = e; });
+        await missing.initialize();
+
+        expect(missing.getStats().agenticFlowAvailable).toBe(false);
+        expect(initEvent).toEqual({
+          agenticFlowAvailable: false,
+          reasoningBank: false,
+          agentBooster: false,
+          configTuning: false,
+        });
+      });
     });
   });
 
@@ -91,11 +151,21 @@ describe('TokenOptimizer', () => {
       expect(['mesh', 'hierarchical']).toContain(config.topology);
     });
 
+    // Since #1514 (v3.5.53, commit 0752e5963) the fallback config scales with
+    // agent count: <=6 hierarchical, <=12 hierarchical-mesh, above that mesh;
+    // batch size 2 / 4 / 6 for <=4 / <=8 / more agents.
+    it('should scale to hierarchical-mesh for medium teams', () => {
+      const config = optimizer.getOptimalConfig(8);
+
+      expect(config.topology).toBe('hierarchical-mesh');
+      expect(config.batchSize).toBe(4);
+    });
+
     it('should handle large agent counts', () => {
       const config = optimizer.getOptimalConfig(15);
 
-      expect(config.topology).toBe('hierarchical');
-      expect(config.batchSize).toBeLessThanOrEqual(5);
+      expect(config.topology).toBe('mesh');
+      expect(config.batchSize).toBe(6);
     });
   });
 

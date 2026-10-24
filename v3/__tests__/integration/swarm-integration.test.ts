@@ -203,8 +203,8 @@ describe('Swarm Integration Tests', () => {
     const scaledUpCount = (await coordinator.listAgents()).length;
     expect(scaledUpCount).toBe(4);
 
-    // Scale down
-    await coordinator.scaleAgents({ type: 'coder', count: 2 });
+    // Scale down: scaleAgents takes a signed delta (negative count terminates agents)
+    await coordinator.scaleAgents({ type: 'coder', count: -2 });
 
     const scaledDownCount = (await coordinator.listAgents()).length;
     expect(scaledDownCount).toBe(2);
