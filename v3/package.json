@@ -42,9 +42,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/coverage-v8": "^3.2.6",
     "typescript": "^5.3.0",
-    "vitest": "^4.0.16",
+    "vitest": "^3.2.6",
     "zod": "^3.25.76"
   },
   "engines": {
@@ -64,6 +64,8 @@
       "@hono/node-server": ">=1.19.13",
       "axios": ">=1.15.0",
       "brace-expansion": ">=2.0.3",
+      "minimatch@9.0.5>brace-expansion": "^2.1.7",
+      "minimatch@3.1.2>brace-expansion": "^2.1.7",
       "follow-redirects": ">=1.16.0",
       "handlebars": ">=4.7.9",
       "hono": ">=4.12.14",
