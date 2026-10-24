@@ -45,6 +45,9 @@ importers:
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.1)(@types/node@20.19.27)
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
 
   '@claude-flow/aidefence':
     dependencies:
