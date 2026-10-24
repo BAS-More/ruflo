@@ -81,7 +81,9 @@ async function getRegistry(dbPath?: string): Promise<any | null> {
         try {
           await registry.initialize({
             dbPath: dbPath || getDbPath(),
-            embeddingModel: 'Xenova/all-MiniLM-L6-v2',
+            // 384 = Xenova/all-MiniLM-L6-v2. RuntimeConfig has no model-name
+            // field; the registry only takes the dimension (or an
+            // embeddingGenerator), so the model is selected elsewhere.
             dimension: 384,
             controllers: {
               reasoningBank: true,
