@@ -52,11 +52,11 @@ Document all actionable findings from the deep system audit. File size (>500 lin
     - HTTP: `express.json` limit, mapped to 413 / `-32600` (malformed JSON gives 400 / `-32700`).
     - WebSocket and HTTP `/ws`: `maxPayload`, which closes the connection with 1009.
     - The Docker bridge body limit (`ruflo/src/mcp-bridge/index.js`, `ruflo/src/ruvocal/mcp-bridge/index.js`) drops from `10mb` to `1mb`.
-  - **Input shape:** a structural guard runs before any tool handler or schema validation: at most 10,000 items per array, 10,000 keys per object, 100,000 values in total, and depth 32. On CLI stdio it rejects with `-32602`.
+  - **Input shape:** a structural guard runs before tool handlers and schema validation in the `@claude-flow/mcp` and `v3/mcp` registries and on the CLI stdio `tools/call` path: at most 10,000 items per array, 10,000 keys per object, 100,000 values in total, and depth 32. On CLI stdio it rejects with `-32602`.
   - **Validation output:** the `@claude-flow/mcp` validator returns at most 20 errors and no longer recurses per item. `v3/mcp` runs Ajv with `allErrors: false`.
   - **Per-field caps:** tool schemas declare `maxItems`. In `v3/mcp` these come from `MCP_ARRAY_LIMITS`; claims `labels` is capped at 20.
-  - **Store size:** `memory_store` rejects values whose JSON encoding exceeds 1 MiB - 4 KiB, so a stored value still fits in one message.
-  - **Not covered here:** small payloads that make a handler do a lot of work (unclamped loop counts, slow regexes, persistent-store growth, unbounded stdio concurrency), and the Docker bridge's unauthenticated `terminal_` tools. Those are tracked separately.
+  - **Store size:** `memory_store` rejects values whose JSON encoding exceeds 1 MiB - 4 KiB, so the value alone fits in one message (the 4 KiB covers a typical key, tags and envelope, not every one).
+  - **Not covered here:** small payloads that make a handler do a lot of work (unclamped loop counts, slow regexes, persistent-store growth, unbounded stdio concurrency), tool-call validation in the `@claude-flow/shared` MCP registry (which runs handlers without the guard), and the Docker bridge's unauthenticated `terminal_` tools. Those are tracked separately.
 
 ### P1 — Correctness (Fix This Sprint)
 

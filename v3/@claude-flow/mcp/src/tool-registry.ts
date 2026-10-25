@@ -17,6 +17,9 @@ import type {
 import { validateSchema, formatValidationErrors, type ValidationResult } from './schema-validator.js';
 import { guardInput } from './input-guard.js';
 
+/** Validation errors kept in the log */
+const MAX_LOGGED_ERRORS = 5;
+
 interface ToolMetadata {
   tool: MCPTool;
   registeredAt: Date;
@@ -315,7 +318,7 @@ export class ToolRegistry extends EventEmitter {
           name,
           errorCount: validation.errors.length,
           truncated: validation.truncated === true,
-          errors: validation.errors.slice(0, 5),
+          errors: validation.errors.slice(0, MAX_LOGGED_ERRORS),
         });
         return {
           content: [{

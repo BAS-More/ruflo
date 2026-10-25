@@ -3,7 +3,7 @@
  *
  * Standard I/O transport for MCP communication:
  * - Optimized JSON parsing with streaming
- * - Buffer management for large messages
+ * - Per-message byte cap (DEFAULT_MAX_MESSAGE_BYTES)
  * - Graceful shutdown handling
  *
  * Performance Targets:
@@ -37,7 +37,7 @@ export interface StdioTransportConfig {
 /**
  * Stdio Transport Implementation
  *
- * Uses readline for efficient line-by-line processing of JSON-RPC messages
+ * Splits stdin on raw bytes with a size-capped LineSplitter (transport/limits.ts)
  */
 export class StdioTransport extends EventEmitter implements ITransport {
   public readonly type: TransportType = 'stdio';

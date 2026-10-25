@@ -140,6 +140,7 @@ export {
   WebSocketTransport,
   WebSocketTransportConfig,
 } from './transport/index.js';
+export type { LineEvent } from './transport/index.js';
 
 /**
  * Quick start function to create and configure an MCP server

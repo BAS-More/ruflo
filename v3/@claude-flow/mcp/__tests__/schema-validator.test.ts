@@ -271,6 +271,13 @@ describe('guardInput', () => {
     });
   });
 
+  it('uses the same limits as the schema validator', () => {
+    expect(INPUT_GUARD_LIMITS.maxArrayItems).toBe(DEFAULT_VALIDATION_LIMITS.maxArrayItems);
+    expect(INPUT_GUARD_LIMITS.maxObjectKeys).toBe(DEFAULT_VALIDATION_LIMITS.maxProperties);
+    expect(INPUT_GUARD_LIMITS.maxNodes).toBe(DEFAULT_VALIDATION_LIMITS.maxNodes);
+    expect(INPUT_GUARD_LIMITS.maxDepth).toBe(DEFAULT_VALIDATION_LIMITS.maxDepth);
+  });
+
   it('accepts ordinary input and arrays at the cap', () => {
     expect(guardInput({ a: 1, b: [1, 2, { c: 'x' }] })).toEqual({ ok: true });
     expect(guardInput({ tags: new Array(10_000).fill('t') })).toEqual({ ok: true });

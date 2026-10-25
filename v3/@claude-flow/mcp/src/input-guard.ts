@@ -8,15 +8,18 @@
  * objects, total size or nesting depth.
  */
 
+import { DEFAULT_VALIDATION_LIMITS } from './schema-validator.js';
+
+/** Taken from the schema validator's defaults so the two cannot drift */
 export const INPUT_GUARD_LIMITS = {
   /** Items in any one array */
-  maxArrayItems: 10_000,
+  maxArrayItems: DEFAULT_VALIDATION_LIMITS.maxArrayItems,
   /** Keys in any one object */
-  maxObjectKeys: 10_000,
+  maxObjectKeys: DEFAULT_VALIDATION_LIMITS.maxProperties,
   /** Values in the whole input, containers included */
-  maxNodes: 100_000,
+  maxNodes: DEFAULT_VALIDATION_LIMITS.maxNodes,
   /** Nesting depth of objects and arrays */
-  maxDepth: 32,
+  maxDepth: DEFAULT_VALIDATION_LIMITS.maxDepth,
 } as const;
 
 /** Characters of a path kept in a reason */
