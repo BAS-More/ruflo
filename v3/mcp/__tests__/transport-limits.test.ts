@@ -105,6 +105,17 @@ describe('transport limits', () => {
       expect(() => resolveMaxMessageBytes(bad as any), String(bad)).toThrow(/positive/);
     }
   });
+
+  it('resolveMaxMessageBytes parses padded sizes in linear time', () => {
+    expect(resolveMaxMessageBytes(' 2 mb ')).toBe(2 * MiB);
+    expect(resolveMaxMessageBytes('\t64kb\n')).toBe(64 * 1024);
+    // CodeQL js/polynomial-redos: '0' followed by many tabs backtracked
+    // quadratically with the old pattern (seconds at this length).
+    const hostile = '0' + '\t'.repeat(50_000) + 'x';
+    const start = performance.now();
+    expect(() => resolveMaxMessageBytes(hostile)).toThrow(/positive/);
+    expect(performance.now() - start).toBeLessThan(500);
+  });
 });
 
 describe('LineSplitter', () => {
