@@ -25,9 +25,16 @@ import {
   ToolRegistrationOptions,
   ILogger,
 } from './types.js';
+import { guardInput, formatToolError } from './input-guard.js';
 
-// Schema validator instance (singleton for performance)
-const ajv = new Ajv({ allErrors: true, strict: false });
+// Schema validator instance (singleton for performance).
+// allErrors is off so one invalid item ends validation, instead of Ajv
+// building (and the registry logging) one error per item.
+const ajv = new Ajv({ allErrors: false, strict: false });
+
+/** Validation errors kept in the log and in the response */
+const MAX_LOGGED_ERRORS = 5;
+const MAX_RETURNED_ERRORS = 10;
 
 /**
  * Tool metadata for enhanced lookup
@@ -387,15 +394,28 @@ export class ToolRegistry extends EventEmitter {
       };
     }
 
+    // Bound the input's shape before Ajv walks it (security boundary).
+    // This also covers record fields, which the schema only types as 'object'.
+    const guard = guardInput(input);
+    if (!guard.ok) {
+      this.logger.warn('Tool input rejected', { name, reason: guard.reason });
+      return {
+        content: [{ type: 'text', text: `Input validation failed: ${guard.reason}` }],
+        isError: true,
+      };
+    }
+
     // Validate input against schema before execution (security boundary)
     const validation = this.validateInput(input, metadata.tool.inputSchema);
     if (!validation.valid) {
+      const errors = validation.errors ?? [];
       this.logger.warn('Tool input validation failed', {
         name,
-        errors: validation.errors,
+        errorCount: errors.length,
+        errors: errors.slice(0, MAX_LOGGED_ERRORS),
       });
       return {
-        content: [{ type: 'text', text: `Input validation failed: ${validation.errors?.join(', ')}` }],
+        content: [{ type: 'text', text: `Input validation failed: ${errors.slice(0, MAX_RETURNED_ERRORS).join(', ')}` }],
         isError: true,
       };
     }
@@ -433,13 +453,15 @@ export class ToolRegistry extends EventEmitter {
       const duration = performance.now() - startTime;
       metadata.errorCount++;
 
-      this.logger.error('Tool execution failed', { name, error });
+      // Log and return bounded text: a ZodError's message has one entry per issue
+      const message = formatToolError(error);
+      this.logger.error('Tool execution failed', { name, error: message });
       this.emit('tool:error', { name, error, duration });
 
       return {
         content: [{
           type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          text: `Error: ${message}`,
         }],
         isError: true,
       };
