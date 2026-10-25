@@ -95,6 +95,16 @@ describe('transport limits', () => {
       expect(() => resolveMaxMessageBytes(bad as any), String(bad)).toThrow(/positive/);
     }
   });
+
+  it('resolveMaxMessageBytes rejects sizes ws cannot hold in an int32 (2 GiB and up)', () => {
+    // ws reads maxPayload as `value | 0` and skips the check when that is <= 0,
+    // so 2 GiB would wrap to a negative number and switch the frame cap off.
+    expect(resolveMaxMessageBytes(0x7fffffff)).toBe(0x7fffffff);
+    expect(resolveMaxMessageBytes('1gb')).toBe(1024 * MiB);
+    for (const bad of ['2gb', '4gb', 2 ** 31, 3 * 2 ** 30, Number.MAX_SAFE_INTEGER]) {
+      expect(() => resolveMaxMessageBytes(bad as any), String(bad)).toThrow(/positive/);
+    }
+  });
 });
 
 describe('LineSplitter', () => {
@@ -134,6 +144,34 @@ describe('LineSplitter', () => {
     expect(splitter.push('a\nlast')).toEqual([{ line: 'a' }]);
     expect(splitter.end()).toEqual([{ line: 'last' }]);
     expect(splitter.end()).toEqual([]);
+  });
+
+  it('reports a final unterminated line over the limit on end', () => {
+    const splitter = new LineSplitter(10);
+    expect(splitter.push('a'.repeat(11))).toEqual([]);
+    expect(splitter.end()).toEqual([{ oversized: 11 }]);
+    // A trailing \r is still allowed on top of the limit
+    expect(splitter.push('0123456789\r')).toEqual([]);
+    expect(splitter.end()).toEqual([{ line: '0123456789' }]);
+  });
+
+  it('holds a slowly dripped line in one buffer, not one object per chunk', () => {
+    const splitter = new LineSplitter(4096);
+    for (let i = 0; i < 1000; i++) {
+      expect(splitter.push(Buffer.from('x'))).toEqual([]);
+    }
+    const arrays = Object.values(splitter as object).filter(Array.isArray);
+    expect(arrays.every((a) => a.length <= 1)).toBe(true);
+    expect(splitter.push('\n')).toEqual([{ line: 'x'.repeat(1000) }]);
+  });
+
+  it('copies buffered bytes so a small pending piece does not pin its chunk', () => {
+    const splitter = new LineSplitter(1024);
+    const big = Buffer.alloc(64 * 1024, 'y');
+    big.write('{"a"', big.length - 4);
+    expect(splitter.push(big.subarray(big.length - 4))).toEqual([]);
+    big.fill('z'); // the caller may reuse its buffer
+    expect(splitter.push(':1}\n')).toEqual([{ line: '{"a":1}' }]);
   });
 });
 

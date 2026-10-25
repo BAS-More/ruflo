@@ -11,10 +11,18 @@ export const DEFAULT_MAX_MESSAGE_BYTES = 1_048_576;
 const UNITS: Record<string, number> = { b: 1, kb: 1024, mb: 1024 ** 2, gb: 1024 ** 3 };
 
 /**
+ * Largest size that can be configured. ws reads maxPayload as `value | 0`
+ * and only enforces it when that is above 0, so 2 GiB or more would wrap and
+ * switch the WebSocket frame cap off.
+ */
+const MAX_CONFIGURABLE_BYTES = 0x7fffffff;
+
+/**
  * Resolve a configured size to a byte count.
  *
- * Only an unset value falls back to the default. Zero, negative, fractional
- * or malformed values throw, so a bad config can never disable the cap.
+ * Only an unset value falls back to the default. Zero, negative, fractional,
+ * malformed or 2 GiB-and-larger values throw, so a bad config can never
+ * disable the cap.
  * Strings may be plain digits or use a b/kb/mb/gb suffix, as body-parser does.
  */
 export function resolveMaxMessageBytes(
@@ -35,8 +43,10 @@ export function resolveMaxMessageBytes(
     }
   }
 
-  if (!Number.isSafeInteger(bytes) || bytes <= 0) {
-    throw new Error(`${name} must be a positive integer number of bytes, got ${JSON.stringify(value)}`);
+  if (!Number.isSafeInteger(bytes) || bytes <= 0 || bytes > MAX_CONFIGURABLE_BYTES) {
+    throw new Error(
+      `${name} must be a positive integer number of bytes below 2 GiB, got ${JSON.stringify(value)}`
+    );
   }
   return bytes;
 }
@@ -45,6 +55,8 @@ export type LineEvent = { line: string } | { oversized: number };
 
 const LF = 0x0a;
 const CR = 0x0d;
+const EMPTY = Buffer.alloc(0);
+const MIN_PENDING_BYTES = 256;
 
 /**
  * Newline splitter with a byte cap.
@@ -53,9 +65,13 @@ const CR = 0x0d;
  * characters split across chunks stay intact. A line over the cap is reported
  * once, as soon as the cap is crossed, and the rest of it is discarded up to
  * the next newline without being buffered.
+ *
+ * A partial line is copied into one growable buffer, so a client that drips
+ * one byte per chunk costs about one byte per byte, and a small pending piece
+ * never keeps the caller's larger chunk alive.
  */
 export class LineSplitter {
-  private chunks: Buffer[] = [];
+  private pending: Buffer = EMPTY;
   private size = 0;
   private discarding = false;
 
@@ -79,8 +95,7 @@ export class LineSplitter {
         if (this.size + piece.length > this.maxBytes + 1) {
           events.push(this.reject(this.size + piece.length, idx === -1));
         } else if (idx === -1) {
-          this.chunks.push(piece);
-          this.size += piece.length;
+          this.append(piece);
         } else {
           const line = this.take(piece);
           if (line.length > this.maxBytes) {
@@ -104,13 +119,36 @@ export class LineSplitter {
       this.reset();
       return [];
     }
-    const line = this.take(Buffer.alloc(0));
+    const line = this.take(EMPTY);
+    if (line.length > this.maxBytes) {
+      return [{ oversized: line.length }];
+    }
     return line.length > 0 ? [{ line: line.toString('utf8') }] : [];
   }
 
+  /** Copy a piece onto the pending line, doubling the buffer up to the cap. */
+  private append(piece: Buffer): void {
+    const needed = this.size + piece.length;
+    if (needed > this.pending.length) {
+      const capacity = Math.min(
+        this.maxBytes + 1,
+        Math.max(needed, MIN_PENDING_BYTES, this.pending.length * 2)
+      );
+      const grown = Buffer.allocUnsafe(capacity);
+      this.pending.copy(grown, 0, 0, this.size);
+      this.pending = grown;
+    }
+    piece.copy(this.pending, this.size);
+    this.size = needed;
+  }
+
+  /** Complete the pending line with `last` (decoded by the caller at once). */
   private take(last: Buffer): Buffer {
-    this.chunks.push(last);
-    let line = this.chunks.length === 1 ? last : Buffer.concat(this.chunks);
+    let line = last;
+    if (this.size > 0) {
+      this.append(last);
+      line = this.pending.subarray(0, this.size);
+    }
     if (line.length > 0 && line[line.length - 1] === CR) {
       line = line.subarray(0, line.length - 1);
     }
@@ -125,7 +163,9 @@ export class LineSplitter {
   }
 
   private reset(): void {
-    this.chunks = [];
+    // Drop the buffer rather than reuse it: a returned line may still point
+    // into it, and a 1 MiB buffer should not outlive its line.
+    this.pending = EMPTY;
     this.size = 0;
   }
 }
