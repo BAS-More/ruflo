@@ -4,8 +4,10 @@
  * MCP messages are capped at 1 MiB. memory_store used to accept values up to
  * 1 MiB characters, which no longer fit once JSON escaping, UTF-8 and the
  * JSON-RPC envelope are added. The tool now measures the JSON-encoded value
- * in UTF-8 bytes against 1 MiB - 4 KiB, so an accepted value fits in a
- * message. The `memory store` CLI command does not go through this tool.
+ * in UTF-8 bytes against 1 MiB - 4 KiB, so the value alone always fits in a
+ * message; the 4 KiB headroom covers a typical key, tags and envelope but is
+ * not a guarantee. The `memory store` CLI command does not go through this
+ * tool.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';

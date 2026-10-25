@@ -56,7 +56,10 @@ function ensureMemoryDir(): void {
 // D-2: Input bounds for memory parameters
 const MAX_KEY_LENGTH = 1024;
 // S-5: MCP messages are capped at 1 MiB, so the JSON-encoded value (UTF-8
-// bytes) must leave 4 KiB for the key, tags and JSON-RPC envelope
+// bytes) is held to 1 MiB - 4 KiB. The 4 KiB covers a typical key, tags and
+// JSON-RPC envelope; it is not a guarantee (a 1024-char key of escaped
+// characters alone is ~6 KiB), and the transport cap still rejects any
+// message that ends up over 1 MiB.
 const MAX_VALUE_SIZE = 1024 * 1024 - 4 * 1024;
 const MAX_QUERY_LENGTH = 4096;
 
