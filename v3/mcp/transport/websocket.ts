@@ -27,6 +27,7 @@ import {
   ILogger,
   AuthConfig,
 } from '../types.js';
+import { resolveMaxMessageBytes } from './limits.js';
 
 /**
  * WebSocket Transport Configuration
@@ -42,11 +43,6 @@ export interface WebSocketTransportConfig {
   auth?: AuthConfig;
   enableBinaryMode?: boolean;
 }
-
-/**
- * Default max message size (10MB)
- */
-const DEFAULT_MAX_MESSAGE_SIZE = 10 * 1024 * 1024;
 
 /**
  * Client connection info
@@ -81,12 +77,14 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
   private messagesSent = 0;
   private errors = 0;
   private totalConnections = 0;
+  private readonly maxMessageBytes: number;
 
   constructor(
     private readonly logger: ILogger,
     private readonly config: WebSocketTransportConfig
   ) {
     super();
+    this.maxMessageBytes = resolveMaxMessageBytes(config.maxMessageSize);
   }
 
   /**
@@ -114,7 +112,8 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
     this.wss = new WebSocketServer({
       server: this.server,
       path: this.config.path || '/ws',
-      maxPayload: this.config.maxMessageSize || 10 * 1024 * 1024,
+      // ws applies maxPayload to the inflated size, so deflate cannot bypass it.
+      maxPayload: this.maxMessageBytes,
       perMessageDeflate: true, // Enable compression
     });
 
@@ -350,7 +349,7 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
     this.messagesReceived++;
 
     // Enforce message size limit before parsing (defense in depth)
-    const maxSize = this.config.maxMessageSize || DEFAULT_MAX_MESSAGE_SIZE;
+    const maxSize = this.maxMessageBytes;
     const dataSize = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data.toString());
 
     if (dataSize > maxSize) {

@@ -13,10 +13,13 @@ import type {
 import { StdioTransport, StdioTransportConfig, createStdioTransport } from './stdio.js';
 import { HttpTransport, HttpTransportConfig, createHttpTransport } from './http.js';
 import { WebSocketTransport, WebSocketTransportConfig, createWebSocketTransport } from './websocket.js';
+import { DEFAULT_MAX_MESSAGE_BYTES } from './limits.js';
 
 export { StdioTransport } from './stdio.js';
 export { HttpTransport } from './http.js';
 export { WebSocketTransport } from './websocket.js';
+export { DEFAULT_MAX_MESSAGE_BYTES, resolveMaxMessageBytes, LineSplitter } from './limits.js';
+export type { LineEvent } from './limits.js';
 
 export type { StdioTransportConfig } from './stdio.js';
 export type { HttpTransportConfig } from './http.js';
@@ -217,7 +220,7 @@ export const DEFAULT_TRANSPORT_CONFIGS = {
     port: 3000,
     corsEnabled: true,
     corsOrigins: ['*'],
-    maxRequestSize: '10mb',
+    maxRequestSize: DEFAULT_MAX_MESSAGE_BYTES,
     requestTimeout: 30000,
   } as HttpTransportConfig,
 
@@ -228,6 +231,6 @@ export const DEFAULT_TRANSPORT_CONFIGS = {
     maxConnections: 100,
     heartbeatInterval: 30000,
     heartbeatTimeout: 10000,
-    maxMessageSize: 10 * 1024 * 1024,
+    maxMessageSize: DEFAULT_MAX_MESSAGE_BYTES,
   } as WebSocketTransportConfig,
 } as const;

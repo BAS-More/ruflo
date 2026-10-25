@@ -194,6 +194,9 @@ export {
   TransportManager,
   createTransportManager,
   DEFAULT_TRANSPORT_CONFIGS,
+  DEFAULT_MAX_MESSAGE_BYTES,
+  resolveMaxMessageBytes,
+  LineSplitter,
   StdioTransport,
   HttpTransport,
   WebSocketTransport,
@@ -204,6 +207,7 @@ export type {
   StdioTransportConfig,
   HttpTransportConfig,
   WebSocketTransportConfig,
+  LineEvent,
 } from './transport/index.js';
 
 // Import types for quickStart

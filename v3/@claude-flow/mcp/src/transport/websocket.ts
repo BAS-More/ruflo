@@ -19,6 +19,7 @@ import type {
   ILogger,
   AuthConfig,
 } from '../types.js';
+import { resolveMaxMessageBytes } from './limits.js';
 
 export interface WebSocketTransportConfig {
   host: string;
@@ -58,12 +59,14 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
   private messagesSent = 0;
   private errors = 0;
   private totalConnections = 0;
+  private readonly maxMessageBytes: number;
 
   constructor(
     private readonly logger: ILogger,
     private readonly config: WebSocketTransportConfig
   ) {
     super();
+    this.maxMessageBytes = resolveMaxMessageBytes(config.maxMessageSize);
   }
 
   async start(): Promise<void> {
@@ -85,7 +88,8 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
     this.wss = new WebSocketServer({
       server: this.server,
       path: this.config.path || '/ws',
-      maxPayload: this.config.maxMessageSize || 10 * 1024 * 1024,
+      // ws applies maxPayload to the inflated size, so deflate cannot bypass it.
+      maxPayload: this.maxMessageBytes,
       perMessageDeflate: true,
     });
 

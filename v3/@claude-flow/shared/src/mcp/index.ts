@@ -117,6 +117,11 @@ export {
   createTransportManager,
   DEFAULT_TRANSPORT_CONFIGS,
 
+  // Size limits
+  DEFAULT_MAX_MESSAGE_BYTES,
+  resolveMaxMessageBytes,
+  LineSplitter,
+
   // Specific transports
   StdioTransport,
   HttpTransport,
@@ -129,6 +134,7 @@ export type {
   StdioTransportConfig,
   HttpTransportConfig,
   WebSocketTransportConfig,
+  LineEvent,
 } from './transport/index.js';
 
 /**

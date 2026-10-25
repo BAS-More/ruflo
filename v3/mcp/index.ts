@@ -127,6 +127,11 @@ export {
   TransportConfig,
   DEFAULT_TRANSPORT_CONFIGS,
 
+  // Size limits
+  DEFAULT_MAX_MESSAGE_BYTES,
+  resolveMaxMessageBytes,
+  LineSplitter,
+
   // Specific transports
   StdioTransport,
   StdioTransportConfig,
