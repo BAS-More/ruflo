@@ -51,6 +51,7 @@ Document all actionable findings from the deep system audit. File size (>500 lin
     - stdio, in the CLI bins, `src/mcp-server.ts`, `@claude-flow/mcp`, `@claude-flow/shared` and `v3/mcp`: an incremental byte splitter that drops an oversized line and replies `-32600` with `id: null`.
     - HTTP: `express.json` limit, mapped to 413 / `-32600` (malformed JSON gives 400 / `-32700`).
     - WebSocket and HTTP `/ws`: `maxPayload`, which closes the connection with 1009.
+    - The Docker bridge body limit (`ruflo/src/mcp-bridge/index.js`, `ruflo/src/ruvocal/mcp-bridge/index.js`) drops from `10mb` to `1mb`.
   - **Input shape:** a structural guard runs before any tool handler or schema validation: at most 10,000 items per array, 10,000 keys per object, 100,000 values in total, and depth 32. On CLI stdio it rejects with `-32602`.
   - **Validation output:** the `@claude-flow/mcp` validator returns at most 20 errors and no longer recurses per item. `v3/mcp` runs Ajv with `allErrors: false`.
   - **Per-field caps:** tool schemas declare `maxItems`. In `v3/mcp` these come from `MCP_ARRAY_LIMITS`; claims `labels` is capped at 20.
