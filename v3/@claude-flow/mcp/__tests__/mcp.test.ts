@@ -195,6 +195,106 @@ describe('@claude-flow/mcp', () => {
       expect(stats.totalCategories).toBe(1);
       expect(stats.totalTags).toBe(2);
     });
+
+    describe('input bounds', () => {
+      const arrayTool = (handler = vi.fn(async () => ({ ok: true }))): MCPTool => ({
+        name: 'array-tool',
+        description: 'Takes an array of objects',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            items: {
+              type: 'array',
+              items: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
+            },
+          },
+        },
+        handler,
+      });
+
+      it('rejects a 200k-item array before the handler runs', async () => {
+        const handler = vi.fn(async () => ({ ok: true }));
+        registry.register(arrayTool(handler));
+
+        const items = Array.from({ length: 200_000 }, () => ({}));
+        const result = await registry.execute('array-tool', { items });
+
+        expect(result.isError).toBe(true);
+        expect(handler).not.toHaveBeenCalled();
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        expect(result.content[0].text!.length).toBeLessThan(2000);
+        expect(result.content[0].text).toContain('10000');
+      });
+
+      it('rejects 250k values under an undeclared property', async () => {
+        const handler = vi.fn(async () => ({ ok: true }));
+        registry.register({
+          name: 'string-tool',
+          description: 'Declares one string',
+          inputSchema: { type: 'object', properties: { a: { type: 'string' } } },
+          handler,
+        });
+
+        const junk = Array.from({ length: 250 }, () => new Array(1_000).fill(0));
+        const result = await registry.execute('string-tool', { a: 'x', junk });
+
+        expect(result.isError).toBe(true);
+        expect(handler).not.toHaveBeenCalled();
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        expect(result.content[0].text!.length).toBeLessThan(2000);
+      });
+
+      it('bounds the log and the response for 10k invalid items', async () => {
+        registry.register(arrayTool());
+
+        const items = Array.from({ length: 10_000 }, () => ({}));
+        const result = await registry.execute('array-tool', { items });
+
+        expect(result.isError).toBe(true);
+        expect(result.content[0].text!.length).toBeLessThan(2000);
+        expect(result.content[0].text!.endsWith('(further errors omitted)')).toBe(true);
+
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        const payload = vi.mocked(logger.warn).mock.calls[0][1] as Record<string, unknown>;
+        expect(payload.errorCount).toBe(20);
+        expect((payload.errors as unknown[]).length).toBeLessThanOrEqual(5);
+      });
+
+      it('does not claim omitted errors when there is only one', async () => {
+        registry.register(arrayTool());
+
+        const result = await registry.execute('array-tool', { items: [{}] });
+
+        expect(result.isError).toBe(true);
+        expect(result.content[0].text).not.toContain('further errors omitted');
+      });
+
+      it('still runs the handler for valid input', async () => {
+        const handler = vi.fn(async () => ({ ok: true }));
+        registry.register(arrayTool(handler));
+
+        const result = await registry.execute('array-tool', { items: [{ id: 'a' }] });
+
+        expect(result.isError).toBe(false);
+        expect(handler).toHaveBeenCalledTimes(1);
+      });
+
+      it('rejects a schema with an invalid maxItems at register time', () => {
+        for (const maxItems of [-1, 1.5]) {
+          const ok = registry.register({
+            name: `bad-${maxItems}`,
+            description: 'Invalid limit',
+            inputSchema: {
+              type: 'object',
+              properties: { list: { type: 'array', maxItems } },
+            },
+            handler: async () => ({}),
+          });
+          expect(ok).toBe(false);
+        }
+        expect(registry.getToolCount()).toBe(0);
+      });
+    });
   });
 
   describe('defineTool', () => {
