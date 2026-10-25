@@ -27,6 +27,7 @@ import * as os from 'os';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createLineSplitter } from './mcp-stdio-splitter.js';
+import { guardToolInput } from './mcp-input-guard.js';
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -501,6 +502,16 @@ export class MCPServerManager extends EventEmitter {
               jsonrpc: '2.0',
               id: message.id,
               error: { code: -32601, message: `Tool not found: ${toolName}` },
+            };
+          }
+
+          // S-5: bound the shape of the arguments before the handler runs
+          const guard = guardToolInput(toolParams);
+          if (!guard.ok) {
+            return {
+              jsonrpc: '2.0',
+              id: message.id,
+              error: { code: -32602, message: `Invalid params: ${guard.reason}` },
             };
           }
 

@@ -22,6 +22,7 @@ if (isMCPMode) {
   // Run MCP server mode
   const { listMCPTools, callMCPTool, hasTool } = await import('../dist/src/mcp-client.js');
   const { createLineSplitter } = await import('../dist/src/mcp-stdio-splitter.js');
+  const { guardToolInput } = await import('../dist/src/mcp-input-guard.js');
 
   const VERSION = '3.0.0';
   const sessionId = `mcp-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -120,6 +121,16 @@ if (isMCPMode) {
             jsonrpc: '2.0',
             id: message.id,
             error: { code: -32601, message: `Tool not found: ${toolName}` },
+          };
+        }
+
+        // S-5: bound the shape of the arguments before the handler runs
+        const guard = guardToolInput(toolParams);
+        if (!guard.ok) {
+          return {
+            jsonrpc: '2.0',
+            id: message.id,
+            error: { code: -32602, message: `Invalid params: ${guard.reason}` },
           };
         }
 

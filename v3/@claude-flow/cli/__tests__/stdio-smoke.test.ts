@@ -3,7 +3,9 @@
  *
  * Spawns the real bin entry points and sends a 1.1 MiB line followed by
  * tools/list. The oversized line must get a -32600 reply with id:null and the
- * next message must still be answered. Needs the built dist; skipped otherwise.
+ * next message must still be answered. A tools/call whose arguments break the
+ * input guard must get -32602 under its own id. Needs the built dist; skipped
+ * otherwise.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
@@ -15,7 +17,8 @@ import * as path from 'path';
 const CLI_DIR = path.join(__dirname, '..');
 const DIST_READY =
   existsSync(path.join(CLI_DIR, 'dist', 'src', 'mcp-client.js')) &&
-  existsSync(path.join(CLI_DIR, 'dist', 'src', 'mcp-stdio-splitter.js'));
+  existsSync(path.join(CLI_DIR, 'dist', 'src', 'mcp-stdio-splitter.js')) &&
+  existsSync(path.join(CLI_DIR, 'dist', 'src', 'mcp-input-guard.js'));
 
 const ENTRY_POINTS: Array<{ name: string; args: string[] }> = [
   { name: 'bin/cli.js', args: ['mcp', 'start'] },
@@ -110,6 +113,29 @@ describe.skipIf(!DIST_READY)('CLI stdio MCP: 1 MiB line cap', () => {
       // The oversized request was never parsed or answered under its own id.
       expect(messages.some(m => m.id === 1)).toBe(false);
       expect(messages.filter(m => m.error?.code === -32600)).toHaveLength(1);
+    }, 30_000);
+  }
+});
+
+describe.skipIf(!DIST_READY)('CLI stdio MCP: tools/call input guard', () => {
+  for (const entry of ENTRY_POINTS) {
+    it(`${entry.name} rejects 10,001 tags with -32602 and keeps serving`, async () => {
+      const { proc, waitFor } = startServer(entry);
+
+      proc.stdin!.write(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 3,
+        method: 'tools/call',
+        params: { name: 'memory_store', arguments: { key: 'k', value: 'v', tags: new Array(10_001).fill('t') } },
+      }) + '\n');
+      proc.stdin!.write(JSON.stringify({ jsonrpc: '2.0', id: 4, method: 'ping' }) + '\n');
+
+      const rejected = await waitFor(m => m.id === 3);
+      expect(rejected.error?.code).toBe(-32602);
+      expect(rejected.error?.message).toContain('input.tags');
+
+      const pong = await waitFor(m => m.id === 4);
+      expect(pong.error).toBeUndefined();
     }, 30_000);
   }
 });

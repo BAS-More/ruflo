@@ -10,6 +10,7 @@
 import { randomUUID } from 'crypto';
 import { listMCPTools, callMCPTool, hasTool } from '../dist/src/mcp-client.js';
 import { createLineSplitter } from '../dist/src/mcp-stdio-splitter.js';
+import { guardToolInput } from '../dist/src/mcp-input-guard.js';
 
 const VERSION = '3.0.0';
 const sessionId = `mcp-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -144,6 +145,16 @@ async function handleMessage(message) {
             jsonrpc: '2.0',
             id: message.id,
             error: { code: -32601, message: `Tool not found: ${toolName}` },
+          };
+        }
+
+        // S-5: bound the shape of the arguments before the handler runs
+        const guard = guardToolInput(toolParams);
+        if (!guard.ok) {
+          return {
+            jsonrpc: '2.0',
+            id: message.id,
+            error: { code: -32602, message: `Invalid params: ${guard.reason}` },
           };
         }
 
