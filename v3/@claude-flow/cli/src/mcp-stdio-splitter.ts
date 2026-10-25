@@ -7,6 +7,8 @@
  *
  * - Only the new chunk is searched for '\n'; buffered data is never re-split.
  * - Line size is counted in UTF-8 bytes (Buffer.byteLength), not characters.
+ *   A trailing '\r' (CRLF clients) is not counted, matching LineSplitter in
+ *   @claude-flow/mcp.
  * - A line over the cap is reported once, as soon as the cap is crossed, and
  *   the rest of it is discarded up to the next newline.
  */
@@ -41,7 +43,9 @@ export function createLineSplitter(maxLineBytes: number): LineSplitter {
 
         if (!discarding && piece.length > 0) {
           pendingBytes += Buffer.byteLength(piece, 'utf8');
-          if (pendingBytes > maxLineBytes) {
+          // One extra byte is allowed while the line is open, for a trailing
+          // \r; the exact size is checked once the newline arrives.
+          if (pendingBytes > maxLineBytes + 1) {
             events.push({ type: 'oversize', bytes: pendingBytes });
             parts = [];
             pendingBytes = 0;
@@ -55,7 +59,13 @@ export function createLineSplitter(maxLineBytes: number): LineSplitter {
 
         // End of line: emit it, or finish discarding the oversized one
         if (!discarding) {
-          events.push({ type: 'line', line: parts.join('') });
+          const line = parts.join('');
+          const payloadBytes = line.endsWith('\r') ? pendingBytes - 1 : pendingBytes;
+          if (payloadBytes > maxLineBytes) {
+            events.push({ type: 'oversize', bytes: pendingBytes });
+          } else {
+            events.push({ type: 'line', line });
+          }
         }
         parts = [];
         pendingBytes = 0;

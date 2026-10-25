@@ -60,6 +60,21 @@ describe('createLineSplitter', () => {
     expect(lines(events)).toEqual([]);
   });
 
+  it('does not count the \\r of a CRLF line against the cap', () => {
+    // Same rule as LineSplitter in @claude-flow/mcp: N bytes of payload plus
+    // an optional \r before the \n.
+    const splitter = createLineSplitter(10);
+    expect(lines(splitter.push('a'.repeat(10) + '\r\n'))).toHaveLength(1);
+    expect(splitter.push('b'.repeat(10) + '\r')).toEqual([]);
+    expect(lines(splitter.push('\n'))).toHaveLength(1);
+    let events = splitter.push('c'.repeat(11) + '\n');
+    expect(oversized(events)).toHaveLength(1);
+    expect(lines(events)).toEqual([]);
+    events = splitter.push('d'.repeat(11) + '\r\nok\n');
+    expect(oversized(events)).toHaveLength(1);
+    expect(lines(events)).toEqual(['ok']);
+  });
+
   it('reports a 2 MiB line once, before its newline arrives, then resumes', () => {
     const splitter = createLineSplitter(MiB);
     const chunk = 'x'.repeat(64 * 1024);
