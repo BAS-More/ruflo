@@ -17,6 +17,7 @@
 
 import { z } from 'zod';
 import { MCPTool, ToolContext } from '../types.js';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 import {
   FederationHub,
   getDefaultFederationHub,
@@ -39,7 +40,7 @@ const spawnEphemeralSchema = z.object({
     .describe('Target swarm ID (auto-select if not specified)'),
   ttl: z.number().optional()
     .describe('Time-to-live in milliseconds'),
-  capabilities: z.array(z.string()).optional()
+  capabilities: z.array(z.string()).max(MCP_ARRAY_LIMITS.capabilities).optional()
     .describe('Required capabilities'),
   priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal')
     .describe('Priority for swarm selection'),
@@ -70,7 +71,7 @@ const registerSwarmSchema = z.object({
     .describe('Unique swarm identifier'),
   name: z.string()
     .describe('Human-readable swarm name'),
-  capabilities: z.array(z.string())
+  capabilities: z.array(z.string()).max(MCP_ARRAY_LIMITS.swarmCapabilities)
     .describe('Swarm capabilities'),
   maxAgents: z.number().default(100)
     .describe('Maximum agents this swarm can handle'),
@@ -380,6 +381,7 @@ export const spawnEphemeralTool: MCPTool = {
       },
       capabilities: {
         type: 'array',
+        maxItems: MCP_ARRAY_LIMITS.capabilities,
         items: { type: 'string' },
         description: 'Required capabilities',
       },
@@ -485,6 +487,7 @@ export const registerSwarmTool: MCPTool = {
       },
       capabilities: {
         type: 'array',
+        maxItems: MCP_ARRAY_LIMITS.swarmCapabilities,
         items: { type: 'string' },
         description: 'Swarm capabilities',
       },

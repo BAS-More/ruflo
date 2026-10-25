@@ -9,6 +9,7 @@
  * Implements ADR-005: MCP-First API Design
  */
 import { z } from 'zod';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 // ============================================================================
 // Input Schemas
 // ============================================================================
@@ -37,7 +38,7 @@ const scaleSwarmSchema = z.object({
         .describe('Target number of agents'),
     scaleStrategy: z.enum(['gradual', 'immediate', 'adaptive']).default('gradual')
         .describe('Scaling strategy'),
-    agentTypes: z.array(z.string()).optional()
+    agentTypes: z.array(z.string()).max(MCP_ARRAY_LIMITS.agentTypes).optional()
         .describe('Specific agent types to scale (if not provided, will scale proportionally)'),
     reason: z.string().optional().describe('Reason for scaling'),
 });
@@ -387,6 +388,7 @@ export const scaleSwarmTool = {
             },
             agentTypes: {
                 type: 'array',
+                maxItems: MCP_ARRAY_LIMITS.agentTypes,
                 items: { type: 'string' },
                 description: 'Specific agent types to scale',
             },

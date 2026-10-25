@@ -9,6 +9,7 @@
  * Implements ADR-005: MCP-First API Design
  */
 import { z } from 'zod';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 import { randomBytes, createHash } from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -36,7 +37,7 @@ const saveSessionSchema = z.object({
         .describe('Include memory entries in the session'),
     includeSwarmState: z.boolean().default(true)
         .describe('Include swarm coordination state'),
-    tags: z.array(z.string()).optional()
+    tags: z.array(z.string()).max(MCP_ARRAY_LIMITS.tags).optional()
         .describe('Tags for categorizing the session'),
     metadata: z.record(z.unknown()).optional()
         .describe('Additional metadata'),
@@ -59,7 +60,7 @@ const listSessionsSchema = z.object({
         .describe('Maximum number of sessions to return'),
     offset: z.number().int().nonnegative().default(0)
         .describe('Offset for pagination'),
-    tags: z.array(z.string()).optional()
+    tags: z.array(z.string()).max(MCP_ARRAY_LIMITS.tagFilter).optional()
         .describe('Filter by tags'),
     sortBy: z.enum(['created', 'name', 'size']).default('created')
         .describe('Sort order'),
@@ -556,6 +557,7 @@ export const saveSessionTool = {
             },
             tags: {
                 type: 'array',
+                maxItems: MCP_ARRAY_LIMITS.tags,
                 items: { type: 'string' },
                 description: 'Tags for categorizing the session',
             },
@@ -647,6 +649,7 @@ export const listSessionsTool = {
             },
             tags: {
                 type: 'array',
+                maxItems: MCP_ARRAY_LIMITS.tagFilter,
                 items: { type: 'string' },
                 description: 'Filter by tags',
             },

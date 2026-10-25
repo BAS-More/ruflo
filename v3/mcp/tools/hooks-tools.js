@@ -16,6 +16,7 @@
  * Integrates with ReasoningBank for self-learning capabilities
  */
 import { z } from 'zod';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 import { createReasoningBank, } from '../../@claude-flow/neural/src/index.js';
 // ============================================================================
 // Singleton ReasoningBank Instance
@@ -76,7 +77,7 @@ const postCommandSchema = z.object({
 const routeSchema = z.object({
     task: z.string().describe('Task description to route'),
     context: z.string().optional().describe('Additional context about the task'),
-    preferredAgents: z.array(z.string()).optional().describe('List of preferred agent types'),
+    preferredAgents: z.array(z.string()).max(MCP_ARRAY_LIMITS.agentTypes).optional().describe('List of preferred agent types'),
     constraints: z.record(z.unknown()).optional().describe('Routing constraints'),
     includeExplanation: z.boolean().default(true).describe('Include routing explanation'),
 });
@@ -859,6 +860,7 @@ export const routeTool = {
             },
             preferredAgents: {
                 type: 'array',
+                maxItems: MCP_ARRAY_LIMITS.agentTypes,
                 items: { type: 'string' },
                 description: 'List of preferred agent types',
             },
