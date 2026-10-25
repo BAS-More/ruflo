@@ -43,10 +43,10 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": ">=8.0.5"
+      "vite": "8.3.4"
     }
   },
   "overrides": {
-    "vite": ">=8.0.5"
+    "vite": "8.3.4"
   }
 }
