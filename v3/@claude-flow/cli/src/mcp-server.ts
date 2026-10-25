@@ -26,6 +26,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { createLineSplitter } from './mcp-stdio-splitter.js';
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -378,30 +379,27 @@ export class MCPServerManager extends EventEmitter {
       },
     }));
 
-    // Handle stdin messages (S-5: bounded buffer to prevent OOM)
-    const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB
-    let buffer = '';
+    // Handle stdin messages (S-5: each message is capped at 1 MiB, counted in bytes)
+    const MAX_BUFFER_SIZE = 1024 * 1024; // 1 MiB
+    const splitter = createLineSplitter(MAX_BUFFER_SIZE);
 
-    process.stdin.on('data', async (chunk) => {
-      buffer += chunk.toString();
-
-      if (buffer.length > MAX_BUFFER_SIZE) {
-        console.error(
-          `[${new Date().toISOString()}] ERROR [claude-flow-mcp] Buffer exceeded ${MAX_BUFFER_SIZE} bytes, rejecting`
-        );
-        buffer = '';
-        console.log(JSON.stringify({
-          jsonrpc: '2.0',
-          error: { code: -32600, message: 'Request too large' },
-        }));
-        return;
-      }
-
+    // utf8 decoding keeps multibyte characters whole across chunk edges
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', async (chunk: string) => {
       // Process complete JSON messages
-      let lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // Keep incomplete line in buffer
-
-      for (const line of lines) {
+      for (const event of splitter.push(chunk)) {
+        if (event.type === 'oversize') {
+          console.error(
+            `[${new Date().toISOString()}] ERROR [claude-flow-mcp] Message exceeded ${MAX_BUFFER_SIZE} bytes, discarding`
+          );
+          console.log(JSON.stringify({
+            jsonrpc: '2.0',
+            id: null,
+            error: { code: -32600, message: 'Request too large' },
+          }));
+          continue;
+        }
+        const line = event.line;
         if (line.trim()) {
           try {
             const message = JSON.parse(line);
