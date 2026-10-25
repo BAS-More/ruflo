@@ -44,6 +44,18 @@ Document all actionable findings from the deep system audit. File size (>500 lin
 - **Bug:** Stdio transport reads stdin with `buffer += chunk.toString()` but has no size limit. Malicious client can send arbitrarily large payloads → OOM.
 - **Fix:** Add `MAX_BUFFER_SIZE = 10 * 1024 * 1024` (10MB) check before processing. Reject oversized messages with JSON-RPC error.
 - **Impact:** Denial of Service via memory exhaustion.
+- **Addendum (2026-10, `fix/mcp-input-bounds`):** The 10 MB fix was incomplete, and 10 MB was too high.
+  - The path users actually run, `npx @claude-flow/cli mcp start`, goes through the inline loops in `bin/cli.js` and `bin/mcp-server.js`. Those had no cap, re-split the whole buffer on every chunk, and counted characters rather than bytes.
+  - A 10 MB message of small array items (for example millions of `{}`) still cost gigabytes of heap and seconds of CPU in validation, and overflowed the stack in the `@claude-flow/mcp` schema validator from about 100k items.
+  - **Message size:** every MCP transport now caps a message at **1 MiB** (`DEFAULT_MAX_MESSAGE_BYTES = 1_048_576`), counted in bytes.
+    - stdio, in the CLI bins, `src/mcp-server.ts`, `@claude-flow/mcp`, `@claude-flow/shared` and `v3/mcp`: an incremental byte splitter that drops an oversized line and replies `-32600` with `id: null`.
+    - HTTP: `express.json` limit, mapped to 413 / `-32600` (malformed JSON gives 400 / `-32700`).
+    - WebSocket and HTTP `/ws`: `maxPayload`, which closes the connection with 1009.
+  - **Input shape:** a structural guard runs before any tool handler or schema validation: at most 10,000 items per array, 10,000 keys per object, 100,000 values in total, and depth 32. On CLI stdio it rejects with `-32602`.
+  - **Validation output:** the `@claude-flow/mcp` validator returns at most 20 errors and no longer recurses per item. `v3/mcp` runs Ajv with `allErrors: false`.
+  - **Per-field caps:** tool schemas declare `maxItems`. In `v3/mcp` these come from `MCP_ARRAY_LIMITS`; claims `labels` is capped at 20.
+  - **Store size:** `memory_store` rejects values whose JSON encoding exceeds 1 MiB - 4 KiB, so a stored value still fits in one message.
+  - **Not covered here:** small payloads that make a handler do a lot of work (unclamped loop counts, slow regexes, persistent-store growth, unbounded stdio concurrency), and the Docker bridge's unauthenticated `terminal_` tools. Those are tracked separately.
 
 ### P1 — Correctness (Fix This Sprint)
 
@@ -132,7 +144,7 @@ Document all actionable findings from the deep system audit. File size (>500 lin
 | S-2 | **P0** | Secret Leak | error-handler.ts | **Fixed** |
 | S-3 | **P0** | Shell Injection | plugins/manager.ts | **Fixed** |
 | S-4 | **P0** | URL Injection | ipfs/client.ts | **Fixed** |
-| S-5 | **P0** | DoS | mcp-server.ts | **Fixed** |
+| S-5 | **P0** | DoS | mcp-server.ts, CLI bins, MCP transports | **Fixed** (1 MiB cap, 2026-10 addendum) |
 | C-1 | **P1** | Dead Code | commands/index.ts | **Fixed** |
 | C-2 | **P1** | Correctness | plugins/manager.ts | **Fixed** |
 | C-3 | **P1** | Error Handling | serialization/cfp.ts | **Fixed** |
