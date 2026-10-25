@@ -16,6 +16,8 @@
  */
 
 import { EventEmitter } from 'events';
+import { importOptional } from './optional-import.js';
+import { AGENTIC_FLOW_NATIVE_PROBE } from './native-probe.js';
 import type {
   SDKBridgeConfig,
   SDKVersion,
@@ -336,8 +338,9 @@ export class SDKBridge extends EventEmitter {
   private async detectVersion(): Promise<SDKVersion> {
     // Detect agentic-flow version dynamically
     try {
-      const af = await import('agentic-flow');
-      const version = (af as Record<string, unknown>)['VERSION'] as string | undefined;
+      // importOptional, not import(): see native-probe.ts (Node 20 unhandled rejection)
+      const af = await importOptional<Record<string, unknown>>('agentic-flow', AGENTIC_FLOW_NATIVE_PROBE);
+      const version = af?.['VERSION'] as string | undefined;
       if (version) {
         return this.parseVersion(version);
       }

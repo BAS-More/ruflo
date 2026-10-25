@@ -18,6 +18,8 @@
  */
 
 import { EventEmitter } from 'events';
+import { importOptional } from './optional-import.js';
+import { AGENTIC_FLOW_NATIVE_PROBE } from './native-probe.js';
 import {
   AgenticFlowAgent,
   AgentConfig,
@@ -443,7 +445,8 @@ export class AgentAdapter extends EventEmitter {
     try {
       // Dynamic import to handle optional dependency
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const agenticFlowModule: any = await import('agentic-flow').catch(() => null);
+      // importOptional, not import().catch(): see native-probe.ts (Node 20 unhandled rejection)
+      const agenticFlowModule: any = await importOptional('agentic-flow', AGENTIC_FLOW_NATIVE_PROBE);
 
       if (agenticFlowModule && typeof agenticFlowModule.createAgenticFlow === 'function') {
         this.agenticFlowCore = await agenticFlowModule.createAgenticFlow({});
