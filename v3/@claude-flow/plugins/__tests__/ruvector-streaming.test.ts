@@ -977,12 +977,14 @@ describe('RuVector Streaming', () => {
 
       // Process a large stream
       const generator = createVectorGeneratorStream(5000, 384);
+      let processed = 0;
 
       await pipeline(
         generator,
         new Writable({
           objectMode: true,
           write(chunk, encoding, callback) {
+            processed++;
             callback();
           },
         })
@@ -995,9 +997,14 @@ describe('RuVector Streaming', () => {
 
       const memAfter = process.memoryUsage().heapUsed;
 
-      // Memory growth should be reasonable (allow 50MB variance for test environment)
-      // In production with proper GC, this would be much lower
-      expect(Math.abs(memAfter - memBefore)).toBeLessThan(50 * 1024 * 1024);
+      expect(processed).toBe(5000);
+      expect(generator.readableLength).toBe(0);
+      expect(generator.readableEnded).toBe(true);
+      expect(generator.destroyed).toBe(true);
+
+      // Bound growth, not absolute change: GC may reclaim garbage from earlier
+      // tests while this stream runs. Releasing that memory is not a leak.
+      expect(memAfter - memBefore).toBeLessThan(50 * 1024 * 1024);
     });
   });
 

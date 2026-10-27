@@ -23,7 +23,7 @@ const loadConfigSchema = z.object({
         .describe('Include default values in response'),
 });
 const saveConfigSchema = z.object({
-    config: z.record(z.unknown())
+    config: z.record(z.string(), z.unknown())
         .describe('Configuration object to save'),
     path: z.string().optional()
         .describe('Configuration file path (defaults to ./claude-flow.config.json)'),
@@ -35,7 +35,7 @@ const saveConfigSchema = z.object({
         .describe('Create backup of existing configuration'),
 });
 const validateConfigSchema = z.object({
-    config: z.record(z.unknown())
+    config: z.record(z.string(), z.unknown())
         .describe('Configuration object to validate'),
     strict: z.boolean().default(true)
         .describe('Enable strict validation (fail on unknown fields)'),

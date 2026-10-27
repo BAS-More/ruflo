@@ -87,7 +87,7 @@ export interface MCPTool<TInput = unknown, TOutput = unknown> {
   /** Execution layer (cli, wasm, hybrid) */
   layer: 'cli' | 'wasm' | 'hybrid';
   /** Input schema */
-  inputSchema: z.ZodType<TInput, z.ZodTypeDef, unknown>;
+  inputSchema: z.ZodType<TInput, unknown>;
   /** Handler function */
   handler: (input: TInput, context: ToolContext) => Promise<MCPToolResult<TOutput>>;
 }

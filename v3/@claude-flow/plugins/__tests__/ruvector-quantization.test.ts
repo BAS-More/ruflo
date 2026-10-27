@@ -476,7 +476,19 @@ describe('RuVector Quantization', () => {
     });
 
     it('should perform search with binary quantization', () => {
-      const query = normalizedVector(dimensions);
+      // Random independent vectors have no guaranteed recall after discarding
+      // their magnitudes. Use known sign distances instead of a probabilistic
+      // recall threshold: each flipped sign adds one Hamming-distance unit.
+      const query = Array.from({ length: dimensions }, (_, i) =>
+        (i % 2 === 0 ? 1 : -1) / Math.sqrt(dimensions)
+      );
+      store = createQuantizedStore();
+      // Reverse insertion order so returning the first k entries cannot pass.
+      for (let flips = 23; flips >= 0; flips--) {
+        addVector(store, `neighbor-${flips}`, query.map((value, i) =>
+          i < flips ? -value : value
+        ));
+      }
       const k = 10;
 
       const exactResults = searchExact(store, query, k);
@@ -484,13 +496,16 @@ describe('RuVector Quantization', () => {
 
       expect(binaryResults).toHaveLength(k);
 
-      // Calculate recall (binary is less accurate but much faster)
+      // Equal magnitudes make cosine and Hamming rankings agree exactly.
       const exactIds = exactResults.map((r) => r.id);
       const binaryIds = binaryResults.map((r) => r.id);
       const recall = calculateRecall(exactIds, binaryIds, k);
 
-      // Binary quantization has lower recall but is very fast
-      expect(recall).toBeGreaterThanOrEqual(0.1); // Lower threshold for binary
+      expect(binaryIds).toEqual(Array.from({ length: k }, (_, i) => `neighbor-${i}`));
+      expect(binaryResults.map((r) => r.distance)).toEqual(
+        Array.from({ length: k }, (_, i) => i)
+      );
+      expect(recall).toBe(1);
     });
 
     it('should reduce memory by ~32x with binary', () => {

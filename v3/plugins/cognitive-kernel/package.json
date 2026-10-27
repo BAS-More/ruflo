@@ -57,7 +57,7 @@
     "directory": "v3/plugins/cognitive-kernel"
   },
   "dependencies": {
-    "zod": "^3.22.4"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -81,7 +81,7 @@
     "tag": "v3alpha"
   },
   "overrides": {
-    "vite": ">=7.3.2",
+    "vite": ">=8.0.10",
     "brace-expansion": ">=2.0.3",
     "minimatch": ">=9.0.7"
   }

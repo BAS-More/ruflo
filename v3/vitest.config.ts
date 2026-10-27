@@ -86,7 +86,10 @@ export default defineConfig({
     // Parallel execution
     // Vitest 4 removed test.poolOptions; its options are now top-level.
     // singleThread: false is the default (multiple workers), so only isolate remains.
-    pool: 'threads',
+    // Native addons such as ONNX share a process-wide registry and cannot be
+    // initialized safely from several worker threads. Keep isolation/concurrency
+    // while giving each worker its own native-addon registry.
+    pool: 'forks',
     isolate: true,
 
     // Globals for easier testing
