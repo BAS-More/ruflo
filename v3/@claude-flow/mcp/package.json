@@ -15,7 +15,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "ajv": "^8.12.0",
+    "ajv": "^8.18.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "helmet": "^7.1.0",
@@ -43,10 +43,10 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": ">=8.0.5"
+      "vite": "8.3.4"
     }
   },
   "overrides": {
-    "vite": ">=8.0.5"
+    "vite": "8.3.4"
   }
 }

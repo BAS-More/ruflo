@@ -10,6 +10,8 @@
  */
 
 import { EventEmitter } from 'events';
+import { importOptional } from './optional-import.js';
+import { AGENTIC_FLOW_NATIVE_PROBE } from './native-probe.js';
 
 // Types for agentic-flow integration
 interface TokenStats {
@@ -32,13 +34,12 @@ interface EditOptimization {
   method: 'agent-booster' | 'traditional';
 }
 
-// Dynamic import helper to handle module resolution
+// Dynamic import helper to handle module resolution. Every specifier is an
+// agentic-flow entry point whose graph pulls in native addons, so the native
+// probe runs first (see native-probe.ts: Node 20 double-reports their load
+// failure as an unhandled rejection).
 async function safeImport<T>(modulePath: string): Promise<T | null> {
-  try {
-    return await import(modulePath);
-  } catch {
-    return null;
-  }
+  return importOptional<T>(modulePath, AGENTIC_FLOW_NATIVE_PROBE);
 }
 
 /**
@@ -168,8 +169,6 @@ export class TokenOptimizer extends EventEmitter {
       newContent,
       language,
     });
-
-    this.stats.editsOptimized++;
 
     // Track optimized edits (no fabricated token savings — actual savings
     // come from fewer retries, which we can't measure here)
