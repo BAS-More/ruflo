@@ -36,6 +36,13 @@ jobs:
           scanners: vuln,secret,misconfig
           exit-code: '0'  # don't fail PR; surface via SARIF + Security tab
 
+      - name: Test bounded vulnerability diagnostics
+        run: python -m unittest discover -s .github/scripts/tests -p 'test_trivy_summary.py'
+
+      - name: Summarize vulnerability metadata only
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        run: python .github/scripts/summarize_trivy_vulnerabilities.py trivy-results.sarif
+
       - name: Upload SARIF to GitHub Advanced Security
         if: always()
         uses: github/codeql-action/upload-sarif@v3
