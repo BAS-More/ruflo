@@ -30,6 +30,7 @@ const COMPOSE_PATH = join(RUFLO_DIR, 'docker-compose.yml');
 const NGINX_CONF_PATH = join(RUFLO_DIR, 'src', 'nginx', 'nginx.conf');
 const NGINX_DOCKERFILE = join(RUFLO_DIR, 'src', 'nginx', 'Dockerfile');
 const MCP_BRIDGE_INDEX = join(RUFLO_DIR, 'src', 'mcp-bridge', 'index.js');
+const RUVOCAL_BRIDGE_INDEX = join(RUFLO_DIR, 'src', 'ruvocal', 'mcp-bridge', 'index.js');
 const MCP_BRIDGE_DOCKERFILE = join(RUFLO_DIR, 'src', 'mcp-bridge', 'Dockerfile');
 const CLI_DOCKERFILE = join(CLI_DIR, 'docker', 'Dockerfile');
 const ENV_EXAMPLE = join(RUFLO_DIR, '.env.example');
@@ -357,8 +358,17 @@ describe('MCP Bridge (index.js)', () => {
     expect(groupMatches!.length).toBeGreaterThanOrEqual(8);
   });
 
-  it('uses express with 10mb JSON body limit', () => {
-    expect(bridgeContent).toContain('express.json({ limit: "10mb" })');
+  // The bridge forwards each body to a stdio child (`npx -y ruflo mcp start`),
+  // which rejects any message over 1 MiB, so the bridge caps bodies at 1mb too.
+  it('uses express with 1mb JSON body limit', () => {
+    expect(bridgeContent).toContain('express.json({ limit: "1mb" })');
+    expect(bridgeContent).not.toContain('"10mb"');
+  });
+
+  it('ruvocal bridge copy uses the same 1mb JSON body limit', () => {
+    const ruvocalBridge = readFile(RUVOCAL_BRIDGE_INDEX);
+    expect(ruvocalBridge).toContain('express.json({ limit: "1mb" })');
+    expect(ruvocalBridge).not.toContain('"10mb"');
   });
 
   it('defaults to port 3001', () => {

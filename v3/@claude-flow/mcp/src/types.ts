@@ -191,6 +191,9 @@ export interface JSONSchema {
   maximum?: number;
   minLength?: number;
   maxLength?: number;
+  minItems?: number;
+  maxItems?: number;
+  maxProperties?: number;
   pattern?: string;
   additionalProperties?: boolean | JSONSchema;
 }

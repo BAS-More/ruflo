@@ -127,6 +127,11 @@ export {
   TransportConfig,
   DEFAULT_TRANSPORT_CONFIGS,
 
+  // Size limits
+  DEFAULT_MAX_MESSAGE_BYTES,
+  resolveMaxMessageBytes,
+  LineSplitter,
+
   // Specific transports
   StdioTransport,
   StdioTransportConfig,
@@ -135,6 +140,7 @@ export {
   WebSocketTransport,
   WebSocketTransportConfig,
 } from './transport/index.js';
+export type { LineEvent } from './transport/index.js';
 
 /**
  * Quick start function to create and configure an MCP server

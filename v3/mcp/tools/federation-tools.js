@@ -15,6 +15,7 @@
  * Implements ADR-001: agentic-flow@alpha compatibility
  */
 import { z } from 'zod';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 import { getDefaultFederationHub, } from '../../@claude-flow/swarm/src/federation-hub.js';
 // ============================================================================
 // Input Schemas
@@ -28,7 +29,7 @@ const spawnEphemeralSchema = z.object({
         .describe('Target swarm ID (auto-select if not specified)'),
     ttl: z.number().optional()
         .describe('Time-to-live in milliseconds'),
-    capabilities: z.array(z.string()).optional()
+    capabilities: z.array(z.string()).max(MCP_ARRAY_LIMITS.capabilities).optional()
         .describe('Required capabilities'),
     priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal')
         .describe('Priority for swarm selection'),
@@ -56,7 +57,7 @@ const registerSwarmSchema = z.object({
         .describe('Unique swarm identifier'),
     name: z.string()
         .describe('Human-readable swarm name'),
-    capabilities: z.array(z.string())
+    capabilities: z.array(z.string()).max(MCP_ARRAY_LIMITS.swarmCapabilities)
         .describe('Swarm capabilities'),
     maxAgents: z.number().default(100)
         .describe('Maximum agents this swarm can handle'),
@@ -271,6 +272,7 @@ export const spawnEphemeralTool = {
             },
             capabilities: {
                 type: 'array',
+                maxItems: MCP_ARRAY_LIMITS.capabilities,
                 items: { type: 'string' },
                 description: 'Required capabilities',
             },
@@ -373,6 +375,7 @@ export const registerSwarmTool = {
             },
             capabilities: {
                 type: 'array',
+                maxItems: MCP_ARRAY_LIMITS.swarmCapabilities,
                 items: { type: 'string' },
                 description: 'Swarm capabilities',
             },

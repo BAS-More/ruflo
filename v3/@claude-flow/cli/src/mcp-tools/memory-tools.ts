@@ -55,15 +55,20 @@ function ensureMemoryDir(): void {
 
 // D-2: Input bounds for memory parameters
 const MAX_KEY_LENGTH = 1024;
-const MAX_VALUE_SIZE = 1024 * 1024; // 1MB
+// S-5: MCP messages are capped at 1 MiB, so the JSON-encoded value (UTF-8
+// bytes) is held to 1 MiB - 4 KiB. The 4 KiB covers a typical key, tags and
+// JSON-RPC envelope; it is not a guarantee (a 1024-char key of escaped
+// characters alone is ~6 KiB), and the transport cap still rejects any
+// message that ends up over 1 MiB.
+const MAX_VALUE_SIZE = 1024 * 1024 - 4 * 1024;
 const MAX_QUERY_LENGTH = 4096;
 
-function validateMemoryInput(key?: string, value?: string, query?: string): void {
+function validateMemoryInput(key?: string, value?: unknown, query?: string): void {
   if (key && key.length > MAX_KEY_LENGTH) {
     throw new Error(`Key exceeds maximum length of ${MAX_KEY_LENGTH} characters`);
   }
-  if (value && value.length > MAX_VALUE_SIZE) {
-    throw new Error(`Value exceeds maximum size of ${MAX_VALUE_SIZE} bytes`);
+  if (value !== undefined && Buffer.byteLength(JSON.stringify(value) ?? '', 'utf8') > MAX_VALUE_SIZE) {
+    throw new Error(`Value exceeds maximum size of ${MAX_VALUE_SIZE} bytes (JSON-encoded, UTF-8)`);
   }
   if (query && query.length > MAX_QUERY_LENGTH) {
     throw new Error(`Query exceeds maximum length of ${MAX_QUERY_LENGTH} characters`);
@@ -215,7 +220,8 @@ export const memoryTools: MCPTool[] = [
         };
       }
 
-      validateMemoryInput(key, value);
+      // Measure the value as the client sent it, before it is stringified
+      validateMemoryInput(key, rawValue);
 
       const startTime = performance.now();
 

@@ -9,10 +9,17 @@ import { TokenOptimizer, getTokenOptimizer } from '../token-optimizer.js';
 describe('TokenOptimizer', () => {
   let optimizer: TokenOptimizer;
 
-  beforeAll(async () => {
-    optimizer = await getTokenOptimizer();
+  beforeAll(() => {
+    // Behavior tests own their ReasoningBank fixture: querying the optional
+    // package's real database requires schema setup and made these tests depend
+    // on whether native addons happened to load on the test machine.
+    // Initialization and native-failure detection are covered separately below.
+    optimizer = new TokenOptimizer();
+    (optimizer as any).reasoningBank = {
+      retrieveMemories: async () => [],
+      formatMemoriesForPrompt: () => '',
+    };
   });
-
   describe('initialization', () => {
     it('should initialize successfully', async () => {
       const newOptimizer = new TokenOptimizer();
@@ -140,6 +147,23 @@ describe('TokenOptimizer', () => {
       expect(ctx).toHaveProperty('compactPrompt');
       expect(ctx).toHaveProperty('tokensSaved');
       expect(ctx.query).toBe('authentication patterns');
+    });
+
+    it('formats retrieved memories and records actual token savings', async () => {
+      const memories = [{ content: 'short', score: 0.9 }];
+      const retrieveMemories = vi.fn(async () => memories);
+      const formatMemoriesForPrompt = vi.fn(() => 'short');
+      const available = new TokenOptimizer();
+      (available as any).reasoningBank = { retrieveMemories, formatMemoriesForPrompt };
+      const query = 'a'.repeat(80);
+
+      const result = await available.getCompactContext(query, { limit: 2, threshold: 0.8 });
+
+      expect(retrieveMemories).toHaveBeenCalledWith(query, { limit: 2, threshold: 0.8 });
+      expect(formatMemoriesForPrompt).toHaveBeenCalledWith(memories);
+      expect(result).toEqual({ query, memories, compactPrompt: 'short', tokensSaved: 18 });
+      expect(available.getStats().totalTokensSaved).toBe(18);
+      expect(available.getStats().memoriesRetrieved).toBe(1);
     });
 
     it('should track tokens saved', async () => {

@@ -832,7 +832,7 @@ const GROUP_DISPLAY_NAMES = {
 // =============================================================================
 
 const app = express();
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "1mb" }));
 
 // ---------- CORS middleware ----------
 app.use((req, res, next) => {

@@ -83,10 +83,11 @@ export default defineConfig({
     // Reporter configuration
     reporters: ['default'],
 
-    // Parallel execution
-    // Vitest 4 removed test.poolOptions; its options are now top-level.
-    // singleThread: false is the default (multiple workers), so only isolate remains.
-    pool: 'threads',
+    // Keep parallel workers in separate processes. Optional agentic-flow imports
+    // can load onnxruntime-node 1.14.0, whose native binding is not safe to load
+    // in multiple worker threads in one process (ERR_DLOPEN_FAILED). Forks retain
+    // test isolation and concurrency without sharing the native-addon registry.
+    pool: 'forks',
     isolate: true,
 
     // Globals for easier testing

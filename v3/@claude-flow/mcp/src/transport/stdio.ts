@@ -5,7 +5,6 @@
  */
 
 import { EventEmitter } from 'events';
-import * as readline from 'readline';
 import type {
   ITransport,
   TransportType,
@@ -17,6 +16,7 @@ import type {
   TransportHealthStatus,
   ILogger,
 } from '../types.js';
+import { LineSplitter, LineEvent, resolveMaxMessageBytes } from './limits.js';
 
 export interface StdioTransportConfig {
   inputStream?: NodeJS.ReadableStream;
@@ -29,7 +29,9 @@ export class StdioTransport extends EventEmitter implements ITransport {
 
   private requestHandler?: RequestHandler;
   private notificationHandler?: NotificationHandler;
-  private rl?: readline.Interface;
+  private splitter?: LineSplitter;
+  private onData?: (chunk: Buffer | string) => void;
+  private onEnd?: () => void;
   private running = false;
 
   private messagesReceived = 0;
@@ -47,7 +49,7 @@ export class StdioTransport extends EventEmitter implements ITransport {
     super();
     this.inputStream = config.inputStream || process.stdin;
     this.outputStream = config.outputStream || process.stdout;
-    this.maxMessageSize = config.maxMessageSize || 10 * 1024 * 1024;
+    this.maxMessageSize = resolveMaxMessageBytes(config.maxMessageSize);
   }
 
   async start(): Promise<void> {
@@ -57,18 +59,18 @@ export class StdioTransport extends EventEmitter implements ITransport {
 
     this.logger.info('Starting stdio transport');
 
-    this.rl = readline.createInterface({
-      input: this.inputStream,
-      crlfDelay: Infinity,
-    });
-
-    this.rl.on('line', (line) => {
-      this.handleLine(line);
-    });
-
-    this.rl.on('close', () => {
+    // Split on raw bytes rather than readline, which buffers a line of any
+    // length before it can be measured.
+    const splitter = new LineSplitter(this.maxMessageSize);
+    this.splitter = splitter;
+    this.onData = (chunk) => this.dispatch(splitter.push(chunk));
+    this.onEnd = () => {
+      this.dispatch(splitter.end());
+      this.detach();
       this.handleClose();
-    });
+    };
+    this.inputStream.on('data', this.onData);
+    this.inputStream.on('end', this.onEnd);
 
     this.inputStream.on('error', (error) => {
       this.handleError(error);
@@ -86,9 +88,10 @@ export class StdioTransport extends EventEmitter implements ITransport {
     this.logger.info('Stopping stdio transport');
     this.running = false;
 
-    if (this.rl) {
-      this.rl.close();
-      this.rl = undefined;
+    if (this.splitter) {
+      this.detach();
+      this.inputStream.pause();
+      this.handleClose();
     }
 
     this.logger.info('Stdio transport stopped');
@@ -113,17 +116,35 @@ export class StdioTransport extends EventEmitter implements ITransport {
     };
   }
 
+  private detach(): void {
+    if (this.onData) this.inputStream.removeListener('data', this.onData);
+    if (this.onEnd) this.inputStream.removeListener('end', this.onEnd);
+    this.onData = undefined;
+    this.onEnd = undefined;
+    this.splitter = undefined;
+  }
+
+  private dispatch(events: LineEvent[]): void {
+    for (const event of events) {
+      if ('line' in event) {
+        this.handleLine(event.line);
+      } else {
+        this.handleOversized(event.oversized);
+      }
+    }
+  }
+
+  private handleOversized(seen: number): void {
+    this.logger.warn('Message exceeds maximum size', {
+      size: seen,
+      max: this.maxMessageSize,
+    });
+    this.sendError(null, -32600, `Message exceeds maximum size of ${this.maxMessageSize} bytes`)
+      .catch(() => undefined);
+  }
+
   private async handleLine(line: string): Promise<void> {
     if (!line.trim()) {
-      return;
-    }
-
-    if (line.length > this.maxMessageSize) {
-      this.logger.error('Message exceeds maximum size', {
-        size: line.length,
-        max: this.maxMessageSize,
-      });
-      this.errors++;
       return;
     }
 

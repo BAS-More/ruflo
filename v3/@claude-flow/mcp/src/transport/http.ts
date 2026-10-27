@@ -22,6 +22,7 @@ import type {
   ILogger,
   AuthConfig,
 } from '../types.js';
+import { resolveMaxMessageBytes } from './limits.js';
 
 export interface HttpTransportConfig {
   host: string;
@@ -32,8 +33,28 @@ export interface HttpTransportConfig {
   corsEnabled?: boolean;
   corsOrigins?: string[];
   auth?: AuthConfig;
-  maxRequestSize?: string;
+  /** HTTP body limit: bytes, or a string such as '1mb'. Defaults to 1 MiB. */
+  maxRequestSize?: string | number;
+  /** /ws frame limit in bytes. Defaults to maxRequestSize, then 1 MiB. */
+  maxMessageSize?: number;
   requestTimeout?: number;
+}
+
+/**
+ * Map a body-parser error to an HTTP status and JSON-RPC error.
+ * Returns undefined for anything else, which falls through to the 500 handler.
+ */
+export function mapBodyParserError(
+  err: unknown
+): { status: number; code: number; message: string } | undefined {
+  const e = err as { status?: number; type?: string } | null | undefined;
+  if (e?.status === 413 || e?.type === 'entity.too.large') {
+    return { status: 413, code: -32600, message: 'Request body too large' };
+  }
+  if (e?.type === 'entity.parse.failed') {
+    return { status: 400, code: -32700, message: 'Parse error' };
+  }
+  return undefined;
 }
 
 export class HttpTransport extends EventEmitter implements ITransport {
@@ -52,12 +73,22 @@ export class HttpTransport extends EventEmitter implements ITransport {
   private errors = 0;
   private httpRequests = 0;
   private wsMessages = 0;
+  private readonly maxRequestBytes: number;
+  private readonly maxMessageBytes: number;
 
   constructor(
     private readonly logger: ILogger,
     private readonly config: HttpTransportConfig
   ) {
     super();
+    this.maxRequestBytes = resolveMaxMessageBytes(
+      config.maxRequestSize ?? config.maxMessageSize,
+      'maxRequestSize'
+    );
+    this.maxMessageBytes = resolveMaxMessageBytes(
+      config.maxMessageSize ?? config.maxRequestSize,
+      'maxMessageSize'
+    );
     this.app = express();
     this.setupMiddleware();
     this.setupRoutes();
@@ -78,6 +109,7 @@ export class HttpTransport extends EventEmitter implements ITransport {
     this.wss = new WebSocketServer({
       server: this.server,
       path: '/ws',
+      maxPayload: this.maxMessageBytes,
     });
 
     this.setupWebSocketHandlers();
@@ -202,7 +234,7 @@ export class HttpTransport extends EventEmitter implements ITransport {
     }
 
     this.app.use(express.json({
-      limit: this.config.maxRequestSize || '10mb',
+      limit: this.maxRequestBytes,
     }));
 
     if (this.config.requestTimeout) {
@@ -270,8 +302,19 @@ export class HttpTransport extends EventEmitter implements ITransport {
     });
 
     this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-      this.logger.error('Express error', { error: err });
       this.errors++;
+      const mapped = mapBodyParserError(err);
+      if (mapped) {
+        this.logger.warn('Rejected request body', { status: mapped.status, path: req.path });
+        res.status(mapped.status).json({
+          jsonrpc: '2.0',
+          id: null,
+          error: { code: mapped.code, message: mapped.message },
+        });
+        return;
+      }
+      // Log only the message: the error object can carry the request body.
+      this.logger.error('Express error', { message: err?.message });
       res.status(500).json({
         jsonrpc: '2.0',
         id: null,

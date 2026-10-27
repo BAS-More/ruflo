@@ -3,7 +3,7 @@
  *
  * Standard I/O transport for MCP communication:
  * - Optimized JSON parsing with streaming
- * - Buffer management for large messages
+ * - Per-message byte cap (DEFAULT_MAX_MESSAGE_BYTES)
  * - Graceful shutdown handling
  *
  * Performance Targets:
@@ -12,7 +12,6 @@
  */
 
 import { EventEmitter } from 'events';
-import * as readline from 'readline';
 import {
   ITransport,
   TransportType,
@@ -24,6 +23,7 @@ import {
   TransportHealthStatus,
   ILogger,
 } from '../types.js';
+import { LineSplitter, LineEvent, resolveMaxMessageBytes } from './limits.js';
 
 /**
  * Stdio Transport Configuration
@@ -37,14 +37,16 @@ export interface StdioTransportConfig {
 /**
  * Stdio Transport Implementation
  *
- * Uses readline for efficient line-by-line processing of JSON-RPC messages
+ * Splits stdin on raw bytes with a size-capped LineSplitter (transport/limits.ts)
  */
 export class StdioTransport extends EventEmitter implements ITransport {
   public readonly type: TransportType = 'stdio';
 
   private requestHandler?: RequestHandler;
   private notificationHandler?: NotificationHandler;
-  private rl?: readline.Interface;
+  private splitter?: LineSplitter;
+  private onData?: (chunk: Buffer | string) => void;
+  private onEnd?: () => void;
   private running = false;
   private messageBuffer = '';
 
@@ -64,7 +66,7 @@ export class StdioTransport extends EventEmitter implements ITransport {
     super();
     this.inputStream = config.inputStream || process.stdin;
     this.outputStream = config.outputStream || process.stdout;
-    this.maxMessageSize = config.maxMessageSize || 10 * 1024 * 1024; // 10MB default
+    this.maxMessageSize = resolveMaxMessageBytes(config.maxMessageSize); // 1 MiB default
   }
 
   /**
@@ -77,21 +79,20 @@ export class StdioTransport extends EventEmitter implements ITransport {
 
     this.logger.info('Starting stdio transport');
 
-    // Create readline interface for efficient line processing
-    this.rl = readline.createInterface({
-      input: this.inputStream,
-      crlfDelay: Infinity,
-    });
+    // Split on raw bytes rather than readline, which buffers a line of any
+    // length before it can be measured.
+    const splitter = new LineSplitter(this.maxMessageSize);
+    this.splitter = splitter;
+    this.onData = (chunk) => this.dispatch(splitter.push(chunk));
 
-    // Handle incoming lines
-    this.rl.on('line', (line) => {
-      this.handleLine(line);
-    });
-
-    // Handle close
-    this.rl.on('close', () => {
+    // Handle close: flush a final unterminated line first
+    this.onEnd = () => {
+      this.dispatch(splitter.end());
+      this.detach();
       this.handleClose();
-    });
+    };
+    this.inputStream.on('data', this.onData);
+    this.inputStream.on('end', this.onEnd);
 
     // Handle errors on input stream
     this.inputStream.on('error', (error) => {
@@ -113,9 +114,10 @@ export class StdioTransport extends EventEmitter implements ITransport {
     this.logger.info('Stopping stdio transport');
     this.running = false;
 
-    if (this.rl) {
-      this.rl.close();
-      this.rl = undefined;
+    if (this.splitter) {
+      this.detach();
+      this.inputStream.pause();
+      this.handleClose();
     }
 
     this.logger.info('Stdio transport stopped');
@@ -150,20 +152,46 @@ export class StdioTransport extends EventEmitter implements ITransport {
   }
 
   /**
+   * Remove the input listeners
+   */
+  private detach(): void {
+    if (this.onData) this.inputStream.removeListener('data', this.onData);
+    if (this.onEnd) this.inputStream.removeListener('end', this.onEnd);
+    this.onData = undefined;
+    this.onEnd = undefined;
+    this.splitter = undefined;
+  }
+
+  /**
+   * Route splitter output
+   */
+  private dispatch(events: LineEvent[]): void {
+    for (const event of events) {
+      if ('line' in event) {
+        this.handleLine(event.line);
+      } else {
+        this.handleOversized(event.oversized);
+      }
+    }
+  }
+
+  /**
+   * Reply to a line over the size cap; the splitter discards the rest of it
+   */
+  private handleOversized(seen: number): void {
+    this.logger.warn('Message exceeds maximum size', {
+      size: seen,
+      max: this.maxMessageSize,
+    });
+    this.sendError(null, -32600, `Message exceeds maximum size of ${this.maxMessageSize} bytes`)
+      .catch(() => undefined);
+  }
+
+  /**
    * Handle incoming line
    */
   private async handleLine(line: string): Promise<void> {
     if (!line.trim()) {
-      return;
-    }
-
-    // Check message size
-    if (line.length > this.maxMessageSize) {
-      this.logger.error('Message exceeds maximum size', {
-        size: line.length,
-        max: this.maxMessageSize,
-      });
-      this.errors++;
       return;
     }
 

@@ -14,7 +14,11 @@ import type {
   ToolRegistrationOptions,
   ILogger,
 } from './types.js';
-import { validateSchema, formatValidationErrors } from './schema-validator.js';
+import { validateSchema, formatValidationErrors, type ValidationResult } from './schema-validator.js';
+import { guardInput } from './input-guard.js';
+
+/** Validation errors kept in the log */
+const MAX_LOGGED_ERRORS = 5;
 
 interface ToolMetadata {
   tool: MCPTool;
@@ -282,17 +286,45 @@ export class ToolRegistry extends EventEmitter {
       };
     }
 
-    // Validate input against schema (security feature)
+    // Bound the raw input first: the schema validator only walks declared
+    // properties, so content under undeclared keys is only counted here
+    const guard = guardInput(input);
+    if (!guard.ok) {
+      this.logger.warn('Tool input rejected', { name, reason: guard.reason });
+      return {
+        content: [{ type: 'text', text: `Invalid input: ${guard.reason}` }],
+        isError: true,
+      };
+    }
+
+    // Validate input against schema (security feature; bounded by DEFAULT_VALIDATION_LIMITS)
     if (metadata.tool.inputSchema) {
-      const validation = validateSchema(input, metadata.tool.inputSchema);
+      let validation: ValidationResult;
+      try {
+        validation = validateSchema(input, metadata.tool.inputSchema);
+      } catch (error) {
+        this.logger.warn('Tool input validation threw', {
+          name,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return {
+          content: [{ type: 'text', text: 'Invalid input: validation failed' }],
+          isError: true,
+        };
+      }
       if (!validation.valid) {
         const errorMsg = formatValidationErrors(validation.errors);
         this.logger.warn('Tool input validation failed', {
           name,
-          errors: validation.errors,
+          errorCount: validation.errors.length,
+          truncated: validation.truncated === true,
+          errors: validation.errors.slice(0, MAX_LOGGED_ERRORS),
         });
         return {
-          content: [{ type: 'text', text: `Invalid input: ${errorMsg}` }],
+          content: [{
+            type: 'text',
+            text: `Invalid input: ${errorMsg}${validation.truncated ? ' (further errors omitted)' : ''}`,
+          }],
           isError: true,
         };
       }
@@ -415,6 +447,13 @@ export class ToolRegistry extends EventEmitter {
 
     if (!schema.type) {
       errors.push(`${path || 'schema'}: type is required`);
+    }
+
+    for (const key of ['minItems', 'maxItems', 'maxProperties'] as const) {
+      const value = schema[key];
+      if (value !== undefined && (!Number.isInteger(value) || value < 0)) {
+        errors.push(`${path || 'schema'}: ${key} must be a non-negative integer`);
+      }
     }
 
     if (schema.type === 'object' && schema.properties) {

@@ -12,6 +12,7 @@
 
 import { z } from 'zod';
 import { MCPTool, ToolContext } from '../types.js';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 
 // ============================================================================
 // Input Schemas
@@ -23,7 +24,7 @@ const storeMemorySchema = z.object({
     .default('episodic')
     .describe('Type of memory'),
   category: z.string().optional().describe('Memory category (e.g., code, documentation, conversation)'),
-  tags: z.array(z.string()).optional().describe('Tags for categorization'),
+  tags: z.array(z.string()).max(MCP_ARRAY_LIMITS.tags).optional().describe('Tags for categorization'),
   metadata: z.record(z.unknown()).optional().describe('Additional metadata'),
   importance: z.number().min(0).max(1).optional()
     .describe('Importance score (0-1)'),
@@ -40,7 +41,7 @@ const searchMemorySchema = z.object({
     .default('all')
     .describe('Filter by memory type'),
   category: z.string().optional().describe('Filter by category'),
-  tags: z.array(z.string()).optional().describe('Filter by tags (AND logic)'),
+  tags: z.array(z.string()).max(MCP_ARRAY_LIMITS.tagFilter).optional().describe('Filter by tags (AND logic)'),
   limit: z.number().int().positive().max(1000).default(10)
     .describe('Maximum number of results'),
   minRelevance: z.number().min(0).max(1).optional()
@@ -54,7 +55,7 @@ const listMemorySchema = z.object({
     .default('all')
     .describe('Filter by memory type'),
   category: z.string().optional().describe('Filter by category'),
-  tags: z.array(z.string()).optional().describe('Filter by tags'),
+  tags: z.array(z.string()).max(MCP_ARRAY_LIMITS.tagFilter).optional().describe('Filter by tags'),
   sortBy: z.enum(['created', 'accessed', 'importance', 'relevance'])
     .default('created')
     .describe('Sort order'),
@@ -392,6 +393,7 @@ export const storeMemoryTool: MCPTool = {
       },
       tags: {
         type: 'array',
+        maxItems: MCP_ARRAY_LIMITS.tags,
         items: { type: 'string' },
         description: 'Tags for categorization',
       },
@@ -455,6 +457,7 @@ export const searchMemoryTool: MCPTool = {
       },
       tags: {
         type: 'array',
+        maxItems: MCP_ARRAY_LIMITS.tagFilter,
         items: { type: 'string' },
         description: 'Filter by tags (AND logic)',
       },
@@ -511,6 +514,7 @@ export const listMemoryTool: MCPTool = {
       },
       tags: {
         type: 'array',
+        maxItems: MCP_ARRAY_LIMITS.tagFilter,
         items: { type: 'string' },
         description: 'Filter by tags',
       },

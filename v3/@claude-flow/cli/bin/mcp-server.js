@@ -9,6 +9,8 @@
 
 import { randomUUID } from 'crypto';
 import { listMCPTools, callMCPTool, hasTool } from '../dist/src/mcp-client.js';
+import { createLineSplitter } from '../dist/src/mcp-stdio-splitter.js';
+import { guardToolInput } from '../dist/src/mcp-input-guard.js';
 
 const VERSION = '3.0.0';
 const sessionId = `mcp-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -28,18 +30,26 @@ console.error(JSON.stringify({
   version: VERSION,
 }));
 
-// Handle stdin messages
-let buffer = '';
+// Handle stdin messages (S-5: each message is capped at 1 MiB, counted in bytes)
+const MAX_BUFFER_SIZE = 1024 * 1024;
+const splitter = createLineSplitter(MAX_BUFFER_SIZE);
 
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', async (chunk) => {
-  buffer += chunk;
-
   // Process complete JSON messages (newline-delimited)
-  let lines = buffer.split('\n');
-  buffer = lines.pop() || ''; // Keep incomplete line in buffer
-
-  for (const line of lines) {
+  for (const event of splitter.push(chunk)) {
+    if (event.type === 'oversize') {
+      console.error(
+        `[${new Date().toISOString()}] ERROR [claude-flow-mcp] Message exceeded ${MAX_BUFFER_SIZE} bytes, discarding`
+      );
+      console.log(JSON.stringify({
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: -32600, message: 'Request too large' },
+      }));
+      continue;
+    }
+    const line = event.line;
     if (line.trim()) {
       try {
         const message = JSON.parse(line);
@@ -135,6 +145,16 @@ async function handleMessage(message) {
             jsonrpc: '2.0',
             id: message.id,
             error: { code: -32601, message: `Tool not found: ${toolName}` },
+          };
+        }
+
+        // S-5: bound the shape of the arguments before the handler runs
+        const guard = guardToolInput(toolParams);
+        if (!guard.ok) {
+          return {
+            jsonrpc: '2.0',
+            id: message.id,
+            error: { code: -32602, message: `Invalid params: ${guard.reason}` },
           };
         }
 

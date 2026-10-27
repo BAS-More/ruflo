@@ -46,6 +46,8 @@ interface JSONSchema {
   properties?: Record<string, JSONSchema>;
   required?: string[];
   items?: JSONSchema;
+  minItems?: number;
+  maxItems?: number;
   enum?: string[];
   description?: string;
   default?: unknown;
@@ -336,6 +338,9 @@ function initializeMockData(): void {
 // Input Schemas
 // ============================================================================
 
+/** Maximum labels in an issue-list filter; each one is checked against every issue. */
+const MAX_FILTER_LABELS = 20;
+
 // Core Claiming Schemas
 const issueClaimSchema = z.object({
   issueId: z.string().min(1).describe('Issue ID to claim'),
@@ -374,7 +379,8 @@ const issueStatusUpdateSchema = z.object({
 const issueListAvailableSchema = z.object({
   priority: z.enum(['critical', 'high', 'medium', 'low']).optional()
     .describe('Filter by priority'),
-  labels: z.array(z.string()).optional().describe('Filter by labels'),
+  // The filter scans every issue's labels per entry, so cap the list (ADR-061 S-5 addendum).
+  labels: z.array(z.string()).max(MAX_FILTER_LABELS).optional().describe('Filter by labels'),
   repository: z.string().optional().describe('Filter by repository'),
   limit: z.number().int().positive().max(100).default(50).describe('Maximum results'),
   offset: z.number().int().nonnegative().default(0).describe('Pagination offset'),
@@ -1455,6 +1461,7 @@ export const issueListAvailableTool: MCPTool = {
       labels: {
         type: 'array',
         items: { type: 'string' },
+        maxItems: MAX_FILTER_LABELS,
         description: 'Filter by labels',
       },
       repository: { type: 'string', description: 'Filter by repository' },

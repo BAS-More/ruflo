@@ -39,7 +39,7 @@ import {
 import { ToolRegistry, createToolRegistry } from './tool-registry.js';
 import { SessionManager, createSessionManager } from './session-manager.js';
 import { ConnectionPool, createConnectionPool } from './connection-pool.js';
-import { createTransport, TransportManager, createTransportManager } from './transport/index.js';
+import { createTransport, TransportManager, createTransportManager, DEFAULT_MAX_MESSAGE_BYTES } from './transport/index.js';
 
 /**
  * Default server configuration
@@ -55,7 +55,7 @@ const DEFAULT_CONFIG: Partial<MCPServerConfig> = {
   cacheTTL: 10000,
   logLevel: 'info',
   requestTimeout: 30000,
-  maxRequestSize: 10 * 1024 * 1024,
+  maxRequestSize: DEFAULT_MAX_MESSAGE_BYTES,
 };
 
 /**
@@ -177,7 +177,9 @@ export class MCPServer extends EventEmitter implements IMCPServer {
         corsEnabled: this.config.corsEnabled,
         corsOrigins: this.config.corsOrigins,
         auth: this.config.auth,
-        maxRequestSize: String(this.config.maxRequestSize),
+        // One setting caps every transport: HTTP body, stdio line, ws frame.
+        maxRequestSize: this.config.maxRequestSize,
+        maxMessageSize: this.config.maxRequestSize,
         requestTimeout: this.config.requestTimeout,
       } as any);
 

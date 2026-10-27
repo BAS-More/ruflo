@@ -22,6 +22,7 @@
 import { MCPServer, createMCPServer } from './server.js';
 import { getAllTools, getToolStats, validateToolRegistration } from './tools/index.js';
 import type { ILogger, TransportType, MCPServerConfig } from './types.js';
+import { DEFAULT_MAX_MESSAGE_BYTES } from './transport/limits.js';
 
 /**
  * Parse command line arguments
@@ -218,7 +219,7 @@ async function main(): Promise<void> {
     cacheTTL: 10000,
     logLevel: options.logLevel,
     requestTimeout: 30000,
-    maxRequestSize: 10 * 1024 * 1024,
+    maxRequestSize: DEFAULT_MAX_MESSAGE_BYTES,
   };
 
   // Create server

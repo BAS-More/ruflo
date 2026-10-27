@@ -30,6 +30,7 @@ import { createTaskTool, taskStatusTool, taskResultsTool, listTasksTool } from '
 import { storeMemoryTool, searchMemoryTool, listMemoryTool } from './memory-tools.js';
 import { systemStatusTool, systemMetricsTool, systemInfoTool } from './system-tools.js';
 import { pretrainTool, metricsTool } from './hooks-tools.js';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 
 // ============================================================================
 // V2 Swarm Tools
@@ -166,7 +167,7 @@ export const agentSpawnTool: MCPTool = {
     properties: {
       type: { type: 'string', description: 'Agent type' },
       name: { type: 'string', description: 'Custom agent name' },
-      capabilities: { type: 'array', items: { type: 'string' }, description: 'Agent capabilities' },
+      capabilities: { type: 'array', items: { type: 'string' }, maxItems: MCP_ARRAY_LIMITS.capabilities, description: 'Agent capabilities' },
     },
     required: ['type'],
   },

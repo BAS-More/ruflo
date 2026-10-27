@@ -21,6 +21,8 @@ const isMCPMode = !process.stdin.isTTY && (process.argv.length === 2 || isExplic
 if (isMCPMode) {
   // Run MCP server mode
   const { listMCPTools, callMCPTool, hasTool } = await import('../dist/src/mcp-client.js');
+  const { createLineSplitter } = await import('../dist/src/mcp-stdio-splitter.js');
+  const { guardToolInput } = await import('../dist/src/mcp-input-guard.js');
 
   const VERSION = '3.0.0';
   const sessionId = `mcp-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -29,14 +31,24 @@ if (isMCPMode) {
     `[${new Date().toISOString()}] INFO [claude-flow-mcp] (${sessionId}) Starting in stdio mode`
   );
 
-  let buffer = '';
+  // S-5: cap each newline-delimited message at 1 MiB (counted in bytes)
+  const MAX_BUFFER_SIZE = 1024 * 1024;
+  const splitter = createLineSplitter(MAX_BUFFER_SIZE);
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', async (chunk) => {
-    buffer += chunk;
-    let lines = buffer.split('\n');
-    buffer = lines.pop() || '';
-
-    for (const line of lines) {
+    for (const event of splitter.push(chunk)) {
+      if (event.type === 'oversize') {
+        console.error(
+          `[${new Date().toISOString()}] ERROR [claude-flow-mcp] (${sessionId}) Message exceeded ${MAX_BUFFER_SIZE} bytes, discarding`
+        );
+        console.log(JSON.stringify({
+          jsonrpc: '2.0',
+          id: null,
+          error: { code: -32600, message: 'Request too large' },
+        }));
+        continue;
+      }
+      const line = event.line;
       if (line.trim()) {
         try {
           const message = JSON.parse(line);
@@ -109,6 +121,16 @@ if (isMCPMode) {
             jsonrpc: '2.0',
             id: message.id,
             error: { code: -32601, message: `Tool not found: ${toolName}` },
+          };
+        }
+
+        // S-5: bound the shape of the arguments before the handler runs
+        const guard = guardToolInput(toolParams);
+        if (!guard.ok) {
+          return {
+            jsonrpc: '2.0',
+            id: message.id,
+            error: { code: -32602, message: `Invalid params: ${guard.reason}` },
           };
         }
 

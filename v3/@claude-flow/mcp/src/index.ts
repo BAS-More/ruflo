@@ -146,8 +146,13 @@ export {
   validateSchema,
   formatValidationErrors,
   createValidator,
+  DEFAULT_VALIDATION_LIMITS,
 } from './schema-validator.js';
-export type { ValidationError, ValidationResult } from './schema-validator.js';
+export type { ValidationError, ValidationResult, ValidationLimits } from './schema-validator.js';
+
+// Input Guard
+export { guardInput, INPUT_GUARD_LIMITS } from './input-guard.js';
+export type { InputGuardResult } from './input-guard.js';
 
 // Rate Limiter
 export {
@@ -189,6 +194,9 @@ export {
   TransportManager,
   createTransportManager,
   DEFAULT_TRANSPORT_CONFIGS,
+  DEFAULT_MAX_MESSAGE_BYTES,
+  resolveMaxMessageBytes,
+  LineSplitter,
   StdioTransport,
   HttpTransport,
   WebSocketTransport,
@@ -199,6 +207,7 @@ export type {
   StdioTransportConfig,
   HttpTransportConfig,
   WebSocketTransportConfig,
+  LineEvent,
 } from './transport/index.js';
 
 // Import types for quickStart

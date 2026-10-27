@@ -14,6 +14,7 @@
  * Implements ADR-005: MCP-First API Design
  */
 import { z } from 'zod';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 import { randomBytes } from 'crypto';
 // Secure ID generation helper
 function generateSecureTaskId() {
@@ -29,7 +30,7 @@ const createTaskSchema = z.object({
     description: z.string().min(1).describe('Task description'),
     priority: z.number().int().min(1).max(10).default(5)
         .describe('Task priority (1=highest, 10=lowest)'),
-    dependencies: z.array(z.string()).optional()
+    dependencies: z.array(z.string()).max(MCP_ARRAY_LIMITS.dependencies).optional()
         .describe('Task IDs this task depends on'),
     assignToAgent: z.string().optional()
         .describe('Specific agent ID to assign the task to'),
@@ -96,7 +97,7 @@ const taskDependenciesSchema = z.object({
     taskId: z.string().describe('ID of the task'),
     action: z.enum(['add', 'remove', 'list', 'clear'])
         .describe('Action to perform on dependencies'),
-    dependencies: z.array(z.string()).optional()
+    dependencies: z.array(z.string()).max(MCP_ARRAY_LIMITS.dependencies).optional()
         .describe('Dependencies to add or remove'),
 });
 const taskResultsSchema = z.object({
@@ -682,6 +683,7 @@ export const createTaskTool = {
             },
             dependencies: {
                 type: 'array',
+                maxItems: MCP_ARRAY_LIMITS.dependencies,
                 items: { type: 'string' },
                 description: 'Task IDs this task depends on',
             },
@@ -951,6 +953,7 @@ export const taskDependenciesTool = {
             },
             dependencies: {
                 type: 'array',
+                maxItems: MCP_ARRAY_LIMITS.dependencies,
                 items: { type: 'string' },
                 description: 'Dependencies to add or remove',
             },

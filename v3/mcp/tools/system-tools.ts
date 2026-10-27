@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import * as os from 'os';
 import { MCPTool, ToolContext } from '../types.js';
+import { MCP_ARRAY_LIMITS } from './limits.js';
 
 // ============================================================================
 // Input Schemas
@@ -34,7 +35,7 @@ const systemMetricsSchema = z.object({
     .describe('Time range for metrics'),
   includeHistogram: z.boolean().default(false)
     .describe('Include histogram data'),
-  components: z.array(z.enum(['agents', 'tasks', 'memory', 'swarm', 'all']))
+  components: z.array(z.enum(['agents', 'tasks', 'memory', 'swarm', 'all'])).max(MCP_ARRAY_LIMITS.metricsComponents)
     .default(['all'])
     .describe('Components to include'),
 });
@@ -44,7 +45,7 @@ const systemHealthSchema = z.object({
     .describe('Perform deep health check (checks all dependencies)'),
   timeout: z.number().int().positive().default(5000)
     .describe('Health check timeout in milliseconds'),
-  components: z.array(z.string()).optional()
+  components: z.array(z.string()).max(MCP_ARRAY_LIMITS.healthComponents).optional()
     .describe('Specific components to check'),
 });
 
@@ -803,6 +804,7 @@ export const systemMetricsTool: MCPTool = {
       },
       components: {
         type: 'array',
+        maxItems: MCP_ARRAY_LIMITS.metricsComponents,
         items: {
           type: 'string',
           enum: ['agents', 'tasks', 'memory', 'swarm', 'all'],
@@ -846,6 +848,7 @@ export const systemHealthTool: MCPTool = {
       },
       components: {
         type: 'array',
+        maxItems: MCP_ARRAY_LIMITS.healthComponents,
         items: { type: 'string' },
         description: 'Specific components to check',
       },
