@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
 import {
   InputValidator,
   sanitizeString,
@@ -21,6 +22,9 @@ import {
   UUIDSchema,
   HttpsUrlSchema,
   PortSchema,
+  IPv4Schema,
+  IPSchema,
+  SpawnAgentSchema,
   UserRoleSchema,
   PermissionSchema,
   LoginRequestSchema,
@@ -33,6 +37,51 @@ import {
 } from '../src/input-validator.js';
 
 describe('InputValidator', () => {
+  describe('Zod 4 compatibility', () => {
+    it('validates IPv4 and IPv6 without accepting malformed addresses', () => {
+      expect(IPv4Schema.parse('192.0.2.1')).toBe('192.0.2.1');
+      expect(IPSchema.parse('2001:db8::1')).toBe('2001:db8::1');
+      expect(IPSchema.parse('192.0.2.1')).toBe('192.0.2.1');
+      expect(() => IPv4Schema.parse('2001:db8::1')).toThrow('Invalid IPv4 address');
+      for (const invalid of ['256.1.1.1', 'localhost', '2001:::1', '']) {
+        expect(() => IPSchema.parse(invalid)).toThrow('Invalid IP address');
+      }
+    });
+
+    it('preserves arbitrary string-keyed configuration and metadata values', () => {
+      const values = { enabled: true, retries: 3, nested: { value: null } };
+      expect(SpawnAgentSchema.parse({ type: 'coder', config: values }).config).toEqual(values);
+      expect(TaskInputSchema.parse({
+        taskId: '550e8400-e29b-41d4-a716-446655440000',
+        content: 'implement feature',
+        agentType: 'coder',
+        metadata: values,
+      }).metadata).toEqual(values);
+      expect(SpawnAgentSchema.safeParse({ type: 'coder', config: [] }).success).toBe(false);
+    });
+
+    it('keeps security error messages and delegates unhandled issue codes', () => {
+      expect(() => z.string().min(2).parse('a')).toThrow('Input below minimum required size');
+      expect(() => z.string().max(1).parse('ab')).toThrow('Input exceeds maximum allowed size');
+      expect(() => z.email().parse('invalid')).toThrow('Invalid email format');
+      const result = z.string().safeParse(42);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].code).toBe('invalid_type');
+        expect(result.error.issues[0].message).toContain('string');
+      }
+    });
+
+    it('preserves transformed output and structured failures in safeParse', () => {
+      const success = InputValidator.safeParse(EmailSchema, 'USER@example.com');
+      expect(success.success).toBe(true);
+      if (success.success) expect(success.data).toBe('user@example.com');
+      const failure = InputValidator.safeParse(EmailSchema, 'invalid');
+      expect(failure.success).toBe(false);
+      if (!failure.success) expect(failure.error.issues[0].code).toBe('invalid_format');
+    });
+  });
+
   describe('SafeStringSchema', () => {
     it('should accept safe strings', () => {
       expect(() => SafeStringSchema.parse('hello world')).not.toThrow();

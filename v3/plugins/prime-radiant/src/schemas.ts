@@ -173,7 +173,7 @@ export const AgentStateSchema = z.object({
   agentId: z.string().min(1).describe('Agent identifier'),
   embedding: EmbeddingVectorSchema.describe("Agent's embedding vector"),
   vote: z.union([z.string(), z.boolean()]).optional().describe("Agent's vote"),
-  metadata: z.record(z.unknown()).optional().describe('Additional metadata'),
+  metadata: z.record(z.string(), z.unknown()).optional().describe('Additional metadata'),
 });
 
 export type AgentState = z.infer<typeof AgentStateSchema>;
@@ -254,7 +254,7 @@ export const MemoryEntrySchema = z.object({
   key: z.string().min(1).describe('Unique key for the entry'),
   content: z.string().describe('Text content of the entry'),
   embedding: EmbeddingVectorSchema.describe('Embedding vector for the content'),
-  metadata: z.record(z.unknown()).optional().describe('Optional metadata'),
+  metadata: z.record(z.string(), z.unknown()).optional().describe('Optional metadata'),
 });
 
 export type MemoryEntry = z.infer<typeof MemoryEntrySchema>;
@@ -327,9 +327,9 @@ export const CausalConfigSchema = z.object({
  * Schema for full plugin configuration
  */
 export const PrimeRadiantConfigSchema = z.object({
-  coherence: CoherenceConfigSchema.default({}),
-  spectral: SpectralConfigSchema.default({}),
-  causal: CausalConfigSchema.default({}),
+  coherence: CoherenceConfigSchema.prefault({}),
+  spectral: SpectralConfigSchema.prefault({}),
+  causal: CausalConfigSchema.prefault({}),
 });
 
 export type PrimeRadiantConfig = z.infer<typeof PrimeRadiantConfigSchema>;

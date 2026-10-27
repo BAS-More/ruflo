@@ -10,7 +10,14 @@ describe('TokenOptimizer', () => {
   let optimizer: TokenOptimizer;
 
   beforeAll(async () => {
-    optimizer = await getTokenOptimizer();
+    // Behavior tests use an owned fixture, not the optional package's external
+    // native database. Initialization and native-failure handling are covered
+    // separately below.
+    optimizer = new TokenOptimizer();
+    (optimizer as any).reasoningBank = {
+      retrieveMemories: async () => [],
+      formatMemoriesForPrompt: () => '',
+    };
   });
 
   describe('initialization', () => {
@@ -24,15 +31,28 @@ describe('TokenOptimizer', () => {
     });
 
     // Availability detection is tested against narrow mocks of the one external
-    // package, not against whatever agentic-flow build happens to be installed:
-    // the installed agentic-flow@2.0.0-alpha currently fails to import (its
-    // agentdb dependency moved dist/controllers), which made this environment-
-    // dependent. Both branches of the detection logic are asserted exactly.
+    // package, not against whatever agentic-flow build happens to be installed,
+    // so the result does not depend on the environment. Both branches of the
+    // detection logic are asserted exactly.
+    //
+    // The native-addon probe (../native-probe.ts) is mocked too: it require()s
+    // the real installed sharp/onnxruntime-node, which vi.doMock cannot reach,
+    // and onnxruntime-node 1.14.0 cannot load in a second worker thread, so the
+    // probe's real answer depends on which other test files ran in this process.
+    // The probe's own behaviour is covered by optional-import.test.ts.
     describe('agentic-flow availability detection', () => {
       // Re-import the optimizer after registering mocks so its dynamic
       // import('agentic-flow') resolves against them, not a cached module.
+      // The probe result is read through a variable rather than baked into each
+      // factory: Vitest keeps a mocked module's first instance across
+      // vi.resetModules().
+      let nativeDepsLoad = true;
       const freshTokenOptimizer = async () => {
         vi.resetModules();
+        vi.doMock('../native-probe.js', async (importOriginal) => ({
+          ...(await importOriginal<typeof import('../native-probe.js')>()),
+          nativeDepsLoadable: () => nativeDepsLoad,
+        }));
         return (await import('../token-optimizer.js')).TokenOptimizer;
       };
 
@@ -40,6 +60,8 @@ describe('TokenOptimizer', () => {
         vi.doUnmock('agentic-flow');
         vi.doUnmock('agentic-flow/reasoningbank');
         vi.doUnmock('agentic-flow/agent-booster');
+        vi.doUnmock('../native-probe.js');
+        nativeDepsLoad = true;
       });
 
       it('should detect agentic-flow when the module imports', async () => {
@@ -87,6 +109,32 @@ describe('TokenOptimizer', () => {
           configTuning: false,
         });
       });
+
+      // Regression: agentic-flow ~2.0.14 resolves, and importing it reaches
+      // @xenova/transformers -> onnxruntime-node@1.14.0, which fails to load in a
+      // second worker thread ("Module did not self-register"). On Node 20 that
+      // surfaced as an unhandled rejection although the import was caught. When
+      // a native dependency cannot load, agentic-flow must not be imported at all.
+      it('should not import agentic-flow when one of its native dependencies cannot load', async () => {
+        const factory = vi.fn(() => ({ default: {}, configTuning: undefined }));
+        vi.doMock('agentic-flow', factory);
+        nativeDepsLoad = false;
+        const Fresh = await freshTokenOptimizer();
+
+        const degraded = new Fresh();
+        let initEvent: Record<string, boolean> | undefined;
+        degraded.on('initialized', (e) => { initEvent = e; });
+        await degraded.initialize();
+
+        expect(factory).not.toHaveBeenCalled();
+        expect(degraded.getStats().agenticFlowAvailable).toBe(false);
+        expect(initEvent).toEqual({
+          agenticFlowAvailable: false,
+          reasoningBank: false,
+          agentBooster: false,
+          configTuning: false,
+        });
+      });
     });
   });
 
@@ -99,6 +147,23 @@ describe('TokenOptimizer', () => {
       expect(ctx).toHaveProperty('compactPrompt');
       expect(ctx).toHaveProperty('tokensSaved');
       expect(ctx.query).toBe('authentication patterns');
+    });
+
+    it('formats retrieved memories and records actual token savings', async () => {
+      const memories = [{ content: 'short', score: 0.9 }];
+      const retrieveMemories = vi.fn(async () => memories);
+      const formatMemoriesForPrompt = vi.fn(() => 'short');
+      const available = new TokenOptimizer();
+      (available as any).reasoningBank = { retrieveMemories, formatMemoriesForPrompt };
+      const query = 'a'.repeat(80);
+
+      const result = await available.getCompactContext(query, { limit: 2, threshold: 0.8 });
+
+      expect(retrieveMemories).toHaveBeenCalledWith(query, { limit: 2, threshold: 0.8 });
+      expect(formatMemoriesForPrompt).toHaveBeenCalledWith(memories);
+      expect(result).toEqual({ query, memories, compactPrompt: 'short', tokensSaved: 18 });
+      expect(available.getStats().totalTokensSaved).toBe(18);
+      expect(available.getStats().memoriesRetrieved).toBe(1);
     });
 
     it('should track tokens saved', async () => {

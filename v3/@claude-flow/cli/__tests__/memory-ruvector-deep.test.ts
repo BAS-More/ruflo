@@ -1396,6 +1396,18 @@ describe('Agentic Flow Bridge', () => {
 // =============================================================================
 
 describe('Registry API', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+
+  beforeEach(() => {
+    // Unit validation must never contact or modify the public registry.
+    fetchMock.mockReset().mockRejectedValue(new Error('Unexpected registry request'));
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('should export rateItem function', async () => {
     const api = await import('../src/services/registry-api.js');
     expect(typeof api.rateItem).toBe('function');
@@ -1404,34 +1416,47 @@ describe('Registry API', () => {
   it('should reject invalid item IDs', async () => {
     const api = await import('../src/services/registry-api.js');
     await expect(api.rateItem('invalid<>id', 5)).rejects.toThrow('Invalid item ID');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('should reject invalid ratings', async () => {
     const api = await import('../src/services/registry-api.js');
     await expect(api.rateItem('@claude-flow/test', 0)).rejects.toThrow('Rating must be integer 1-5');
     await expect(api.rateItem('@claude-flow/test', 6)).rejects.toThrow('Rating must be integer 1-5');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('should reject non-integer ratings', async () => {
     const api = await import('../src/services/registry-api.js');
     await expect(api.rateItem('@claude-flow/test', 3.5)).rejects.toThrow('Rating must be integer 1-5');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('should accept valid item IDs with scopes', async () => {
     const api = await import('../src/services/registry-api.js');
-    // This should not throw on validation, but will fail on network
-    // We just check it passes validation by catching the network error
-    try {
-      await api.getRating('@claude-flow/test-plugin', 'plugin');
-    } catch (e: any) {
-      // Network error is expected - validation passed
-      expect(e.message).not.toContain('Invalid item ID');
-    }
+    const rating = { success: true, itemId: '@claude-flow/test-plugin', average: 4, count: 2 };
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(rating), { status: 200 }));
+
+    await expect(api.getRating('@claude-flow/test-plugin', 'plugin')).resolves.toEqual(rating);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [request, options] = fetchMock.mock.calls[0];
+    expect(new URL(String(request)).searchParams.get('itemId')).toBe('@claude-flow/test-plugin');
+    expect(new URL(String(request)).searchParams.get('action')).toBe('get-ratings');
+    expect(options?.body).toBeUndefined();
+    expect(options?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('should report registry failures without making a real request', async () => {
+    const api = await import('../src/services/registry-api.js');
+    fetchMock.mockResolvedValueOnce(new Response('unavailable', { status: 503 }));
+    await expect(api.getRating('@claude-flow/test-plugin')).rejects.toThrow('Failed to get ratings');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('should validate bulk rating IDs', async () => {
     const api = await import('../src/services/registry-api.js');
     await expect(api.getBulkRatings(['valid-id', '<invalid>'])).rejects.toThrow('Invalid item ID');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

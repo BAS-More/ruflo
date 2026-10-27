@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "agent-browser": "^0.6.0",
-    "agentic-flow": "^2.0.3",
+    "agentic-flow": "~2.0.14",
     "zod": "^4.6.6"
   },
   "peerDependencies": {

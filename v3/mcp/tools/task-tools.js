@@ -35,11 +35,11 @@ const createTaskSchema = z.object({
         .describe('Specific agent ID to assign the task to'),
     assignToAgentType: z.string().optional()
         .describe('Agent type to assign the task to (will pick available agent)'),
-    input: z.record(z.unknown()).optional()
+    input: z.record(z.string(), z.unknown()).optional()
         .describe('Task input data'),
     timeout: z.number().int().positive().optional()
         .describe('Task timeout in milliseconds'),
-    metadata: z.record(z.unknown()).optional()
+    metadata: z.record(z.string(), z.unknown()).optional()
         .describe('Additional metadata'),
 });
 const listTasksSchema = z.object({
@@ -89,7 +89,7 @@ const updateTaskSchema = z.object({
         .describe('New description'),
     timeout: z.number().int().positive().optional()
         .describe('New timeout'),
-    metadata: z.record(z.unknown()).optional()
+    metadata: z.record(z.string(), z.unknown()).optional()
         .describe('Metadata to merge'),
 });
 const taskDependenciesSchema = z.object({
