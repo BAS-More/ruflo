@@ -90,6 +90,20 @@ describe('transport limits', () => {
     expect(resolveMaxMessageBytes('64kb')).toBe(64 * 1024);
   });
 
+  it('parses whitespace and units without overlapping whitespace scans', () => {
+    expect(resolveMaxMessageBytes(' \t1.5 \tKB\r\n')).toBe(1536);
+    expect(resolveMaxMessageBytes('1' + '\t'.repeat(100_000) + 'kb')).toBe(1024);
+    expect(resolveMaxMessageBytes('1' + '\t'.repeat(100_000))).toBe(1);
+  });
+
+  it('rejects long malformed whitespace suffixes without quadratic backtracking', () => {
+    // CodeQL js/polynomial-redos: two whitespace runs separated by an optional
+    // unit used to revisit every split of this suffix before rejecting it.
+    for (const suffix of ['!', 'kbb']) {
+      expect(() => resolveMaxMessageBytes('0' + '\t'.repeat(100_000) + suffix)).toThrow(/positive/);
+    }
+  });
+
   it('resolveMaxMessageBytes rejects zero, negative and malformed values', () => {
     for (const bad of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, '0', '-5', 'lots', '']) {
       expect(() => resolveMaxMessageBytes(bad as any), String(bad)).toThrow(/positive/);

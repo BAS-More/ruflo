@@ -37,7 +37,9 @@ export function resolveMaxMessageBytes(
   if (typeof value === 'number') {
     bytes = value;
   } else if (typeof value === 'string') {
-    const match = /^\s*(\d+(?:\.\d+)?)\s*(b|kb|mb|gb)?\s*$/i.exec(value);
+    // Trim once so two whitespace quantifiers cannot split the same run
+    // around an absent optional unit (quadratic backtracking on malformed input).
+    const match = /^(\d+(?:\.\d+)?)\s*(b|kb|mb|gb)?$/i.exec(value.trim());
     if (match) {
       bytes = Math.floor(Number(match[1]) * UNITS[(match[2] || 'b').toLowerCase()]);
     }
