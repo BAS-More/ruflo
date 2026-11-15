@@ -31,6 +31,9 @@ const NGINX_CONF_PATH = join(RUFLO_DIR, 'src', 'nginx', 'nginx.conf');
 const NGINX_DOCKERFILE = join(RUFLO_DIR, 'src', 'nginx', 'Dockerfile');
 const MCP_BRIDGE_INDEX = join(RUFLO_DIR, 'src', 'mcp-bridge', 'index.js');
 const MCP_BRIDGE_DOCKERFILE = join(RUFLO_DIR, 'src', 'mcp-bridge', 'Dockerfile');
+// The copy docker-compose.yml actually builds (context: ./src/ruvocal/mcp-bridge)
+const RUVOCAL_BRIDGE_INDEX = join(RUFLO_DIR, 'src', 'ruvocal', 'mcp-bridge', 'index.js');
+const RUVOCAL_BRIDGE_DOCKERFILE = join(RUFLO_DIR, 'src', 'ruvocal', 'mcp-bridge', 'Dockerfile');
 const CLI_DOCKERFILE = join(CLI_DIR, 'docker', 'Dockerfile');
 const ENV_EXAMPLE = join(RUFLO_DIR, '.env.example');
 
@@ -163,7 +166,7 @@ describe('Docker Compose Configuration', () => {
       'MCP_GROUP_SECURITY', 'MCP_GROUP_BROWSER',
       'MCP_GROUP_NEURAL', 'MCP_GROUP_AGENTIC_FLOW',
       'MCP_GROUP_CLAUDE_CODE', 'MCP_GROUP_GEMINI',
-      'MCP_GROUP_CODEX',
+      'MCP_GROUP_CODEX', 'MCP_GROUP_TERMINAL',
     ];
     for (const g of groups) {
       expect(composeContent).toContain(g);
@@ -529,7 +532,7 @@ describe('Environment Example (.env.example)', () => {
       'MCP_GROUP_SECURITY', 'MCP_GROUP_BROWSER',
       'MCP_GROUP_NEURAL', 'MCP_GROUP_AGENTIC_FLOW',
       'MCP_GROUP_CLAUDE_CODE', 'MCP_GROUP_GEMINI',
-      'MCP_GROUP_CODEX',
+      'MCP_GROUP_CODEX', 'MCP_GROUP_TERMINAL',
     ];
     for (const g of groups) {
       expect(envContent).toContain(g);
@@ -655,5 +658,94 @@ describe('Security Checks', () => {
   it('nginx CORS allows all origins (expected for development)', () => {
     const nginx = readFile(NGINX_CONF_PATH);
     expect(nginx).toContain('"*"');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 11. MCP Bridge Exposure: terminal opt-in, HOST bind, loopback publish
+// ---------------------------------------------------------------------------
+
+/** Extract the prefixes array literal of a named tool group in TOOL_GROUPS */
+function extractGroupPrefixes(source: string, group: string): string {
+  const match = source.match(
+    new RegExp(`\\b${group}:\\s*\\{[^}]*?prefixes:\\s*\\[([^\\]]*)\\]`),
+  );
+  return match?.[1] ?? '';
+}
+
+const BRIDGE_COPIES = [
+  { name: 'src/mcp-bridge', index: MCP_BRIDGE_INDEX, dockerfile: MCP_BRIDGE_DOCKERFILE },
+  { name: 'src/ruvocal/mcp-bridge', index: RUVOCAL_BRIDGE_INDEX, dockerfile: RUVOCAL_BRIDGE_DOCKERFILE },
+];
+
+for (const copy of BRIDGE_COPIES) {
+  describe(`MCP Bridge exposure (${copy.name})`, () => {
+    let bridgeContent: string;
+    let dockerContent: string;
+
+    beforeAll(() => {
+      bridgeContent = readFile(copy.index);
+      dockerContent = readFile(copy.dockerfile);
+    });
+
+    it('devtools group prefixes do not include terminal_', () => {
+      const prefixes = extractGroupPrefixes(bridgeContent, 'devtools');
+      expect(prefixes).not.toBe('');
+      expect(prefixes).not.toContain('"terminal_"');
+    });
+
+    it('terminal_ tools live in their own group', () => {
+      const prefixes = extractGroupPrefixes(bridgeContent, 'terminal');
+      expect(prefixes).toContain('"terminal_"');
+    });
+
+    it('terminal group is strict opt-in (MCP_GROUP_TERMINAL === "true")', () => {
+      expect(bridgeContent).toContain('process.env.MCP_GROUP_TERMINAL === "true"');
+      expect(bridgeContent).not.toContain('MCP_GROUP_TERMINAL !== "false"');
+    });
+
+    it('HOST defaults to 127.0.0.1', () => {
+      expect(bridgeContent).toContain('process.env.HOST || "127.0.0.1"');
+    });
+
+    it('listens on PORT and HOST', () => {
+      expect(bridgeContent).toMatch(/app\.listen\(PORT,\s*HOST/);
+    });
+
+    it('Dockerfile sets HOST=0.0.0.0 so other containers can reach the bridge', () => {
+      expect(dockerContent).toContain('ENV HOST=0.0.0.0');
+    });
+
+    it('Dockerfile keeps the terminal group off by default', () => {
+      expect(dockerContent).toContain('ENV MCP_GROUP_TERMINAL=false');
+    });
+  });
+}
+
+describe('Compose host exposure (loopback only)', () => {
+  let composeContent: string;
+  let envContent: string;
+
+  beforeAll(() => {
+    composeContent = readFile(COMPOSE_PATH);
+    envContent = readFile(ENV_EXAMPLE);
+  });
+
+  it('mcp-bridge is published on host loopback only', () => {
+    expect(composeContent).toContain('"127.0.0.1:3001:3001"');
+    expect(composeContent).not.toMatch(/-\s*"3001:3001"/);
+  });
+
+  it('mcp-bridge sets MCP_GROUP_TERMINAL defaulting to false', () => {
+    expect(composeContent).toContain('MCP_GROUP_TERMINAL: ${MCP_GROUP_TERMINAL:-false}');
+  });
+
+  it('mongodb is published on host loopback only', () => {
+    expect(composeContent).toContain('"127.0.0.1:27017:27017"');
+    expect(composeContent).not.toMatch(/-\s*"27017:27017"/);
+  });
+
+  it('.env.example documents MCP_GROUP_TERMINAL=false', () => {
+    expect(envContent).toContain('MCP_GROUP_TERMINAL=false');
   });
 });
